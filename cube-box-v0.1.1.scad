@@ -12,7 +12,7 @@ module main_cube()
     translate([ 0, 0, CUBE_WIDTH / 2 ]) cube(CUBE_WIDTH, center = true);
 };
 
-DEFAULT_CLEARANCE = 0.1;
+DEFAULT_CLEARANCE = 0.2;
 
 INNER_STAND_BASE_THICKNESS = 2;
 INNER_STAND_LIP_THICKNESS = 1;
@@ -32,7 +32,7 @@ difference()
         translate([ 0, 0, 50 + INNER_STAND_LIP_HEIGHT ]) cube(100, center = true);
     }
 
-    duplicate_and_mirror()
+    duplicate_and_mirror() duplicate_and_mirror([ 0, 1, 0 ])
         translate([ __SMALL_HINGE__THICKNESS / 2, -OUTER_SHELL_INNER_WIDTH / 2, -__SMALL_HINGE__THICKNESS / 2 ])
             rotate([ -90, 0, 0 ]) cylinder(h = 10 - __SMALL_HINGE__GEAR_OFFSET_HEIGHT, r = HINGE_GEAR_OUTER_RADIUS);
 }
@@ -50,20 +50,21 @@ translate([ 0, 0, 0.5 ]) cube([ 8, 8, 1 ], center = true);
 BASE_EXTRA_HEIGHT_FOR_GEARS = 0.7;
 BASE_HEIGHT = __SMALL_HINGE__THICKNESS + BASE_EXTRA_HEIGHT_FOR_GEARS;
 
-BASE_LATTICE_OFFSET = __SMALL_HINGE__THICKNESS;
-BASE_LATTICE_COMPLEMENT_OFFSET = BASE_LATTICE_OFFSET - 0.5;
+BASE_LATTICE_OFFSET = __SMALL_HINGE__THICKNESS + DEFAULT_CLEARANCE * 2;
+BASE_LATTICE_COMPLEMENT_OFFSET = __SMALL_HINGE__THICKNESS - DEFAULT_CLEARANCE * 2;
 
 OUTER_SHELL_THICKNESS = 2;
 
 module lat(i, mirror_scale)
 {
-    scale([ mirror_scale, 1, 1 ])
-        translate([ BASE_LATTICE_COMPLEMENT_OFFSET - _EPSILON, i * 4 + 1 + mirror_scale, -BASE_HEIGHT - _EPSILON ])
-            cube([
-                OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_COMPLEMENT_OFFSET + 2 * _EPSILON, 2.05,
-                BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
-                DEFAULT_CLEARANCE
-            ]);
+    scale([ mirror_scale, 1, 1 ]) translate([
+        BASE_LATTICE_COMPLEMENT_OFFSET - _EPSILON, i * 4 + 1 + mirror_scale - DEFAULT_CLEARANCE, -BASE_HEIGHT - _EPSILON
+    ])
+        cube([
+            OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_COMPLEMENT_OFFSET + 2 * _EPSILON, 2 + DEFAULT_CLEARANCE * 2,
+            BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
+            DEFAULT_CLEARANCE
+        ]);
 }
 
 difference()
@@ -72,15 +73,17 @@ difference()
     {
         duplicate_and_mirror() union()
         {
-            translate([ __SMALL_HINGE__THICKNESS, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ])
-                cube([ OUTER_SHELL_INNER_WIDTH / 2 - __SMALL_HINGE__THICKNESS, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
-            translate([ BASE_LATTICE_OFFSET, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ]) cube([
-                OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_OFFSET, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT -
-                __SMALL_HINGE__THICKNESS
+            translate([ BASE_LATTICE_OFFSET, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ])
+                cube([ OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_OFFSET, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
+
+            duplicate_and_mirror([ 0, 1, 0 ]) translate([ __SMALL_HINGE__THICKNESS, 5, -BASE_HEIGHT ]) cube([
+                OUTER_SHELL_INNER_WIDTH / 2 - __SMALL_HINGE__THICKNESS, OUTER_SHELL_INNER_WIDTH / 2 - 5,
+                BASE_HEIGHT
             ]);
         }
 
-        rotate([ 90, 0, 0 ]) translate([ 0, -__SMALL_HINGE__THICKNESS, -15 ]) small_hinge_30mm(round_far_side = true);
+        rotate([ 90, 0, 0 ]) translate([ 0, -__SMALL_HINGE__THICKNESS, -15 ])
+            small_hinge_30mm(plug_clearance_scale = 2, round_far_side = true);
     }
 
     for (i = [-5:5])
