@@ -9,7 +9,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 - Decompose into multiple parts that can be swapped out for differently sized cubes / when there is wear
 
-## (v0.1.x TODO)
+## (v0.1.4 TODO)
 
 - Set the hinge to 7.5mm scale, include two mid-bars and three gear sections.
 - Add rails to help keep the inner stand level.
@@ -17,10 +17,6 @@ include <./node_modules/scad/small_hinge.scad>
 - Snug/soft top corner cube holders (similar to Sebestény cube box corners)?
 - Interlocking or clasping top
   - Support a spring-loaded release?
-
-## v0.1.4
-
-- Lower the shell for the stand.
 
 ## v0.1.3
 
@@ -38,12 +34,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 */
 
-// CUBE_EDGE_LENGTH = 28; // 6mm scale bucolic cube frame
-MAIN_SCALE = 2;
-CUBE_EDGE_LENGTH = 56 / MAIN_SCALE; // YS3M
+CUBE_EDGE_LENGTH = 28; // 6mm scale bucolic cube frame
+// CUBE_EDGE_LENGTH = 56; // YS3M
 
 $fn = 90;
-OPENING_ANGLE_EACH_SIDE = 45;
 
 DEFAULT_CLEARANCE = 0.1;
 
@@ -79,35 +73,7 @@ BASE_LATTICE_COMPLEMENT_OFFSET = __SMALL_HINGE__THICKNESS - DEFAULT_CLEARANCE * 
 
 OUTER_SHELL_THICKNESS = 1;
 
-module inner_stand()
-{
-
-    difference()
-    {
-        translate([ 0, 0, INNER_STAND_LIP_THICKNESS ]) difference()
-        {
-            minkowski()
-            {
-                main_cube();
-                sphere(INNER_STAND_LIP_THICKNESS - DEFAULT_CLEARANCE);
-            }
-
-            main_cube_on_stand();
-            translate([ 0, 0, LARGE_VALUE / 2 + INNER_STAND_LIP_HEIGHT ]) cube(LARGE_VALUE, center = true);
-        }
-
-        duplicate_and_mirror() duplicate_and_mirror([ 0, 1, 0 ])
-            translate([ __SMALL_HINGE__THICKNESS / 2, -OUTER_SHELL_INNER_WIDTH / 2, -__SMALL_HINGE__THICKNESS / 2 ])
-                rotate([ -90, 0, 0 ]) cylinder(h = 10 - __SMALL_HINGE__GEAR_OFFSET_HEIGHT, r = HINGE_GEAR_OUTER_RADIUS);
-    }
-
-    translate([ 0, 0, 0.5 ]) cube([ 8, 8, 1 ], center = true);
-
-    // translate([
-    //     CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS - 5,
-    //     -(CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS - 5) - 5, -5
-    // ]) cube([ 5, 5, 10 ]);
-}
+OPENING_ANGLE_EACH_SIDE = 75;
 
 module rotate_opening_angle()
 {
@@ -166,28 +132,28 @@ LIP_R_W = OUTER_SHELL_INNER_WIDTH / 2 - __SMALL_HINGE__THICKNESS / 2;
 LIP_R_H = INNER_STAND_LIP_HEIGHT + INNER_STAND_FLOOR_ELEVATION + __SMALL_HINGE__THICKNESS / 2;
 LIP_R = sqrt(pow(LIP_R_W, 2) + pow(LIP_R_H, 2));
 
-module lid_inner_part(w, r)
+scale(2) union()
 {
-
     difference()
     {
-        translate([ __SMALL_HINGE__THICKNESS / 2, 0, -__SMALL_HINGE__THICKNESS / 2 ]) rotate([ 90, 0, 0 ])
-            cylinder(h = w, r = r, center = true);
+        translate([ 0, 0, INNER_STAND_LIP_THICKNESS ]) difference()
+        {
+            minkowski()
+            {
+                main_cube();
+                sphere(INNER_STAND_LIP_THICKNESS - DEFAULT_CLEARANCE);
+            }
 
-        translate([ LARGE_VALUE / 2 + w / 2, 0, 0 ]) cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
-        translate([ -LARGE_VALUE / 2 + __SMALL_HINGE__THICKNESS / 2, 0, 0 ])
-            cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
-        translate([ 0, 0, -LARGE_VALUE / 2 + INNER_STAND_FLOOR_ELEVATION ])
-            cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
+            main_cube_on_stand();
+            translate([ 0, 0, LARGE_VALUE / 2 + INNER_STAND_LIP_HEIGHT ]) cube(LARGE_VALUE, center = true);
+        }
+
+        duplicate_and_mirror() duplicate_and_mirror([ 0, 1, 0 ])
+            translate([ __SMALL_HINGE__THICKNESS / 2, -OUTER_SHELL_INNER_WIDTH / 2, -__SMALL_HINGE__THICKNESS / 2 ])
+                rotate([ -90, 0, 0 ]) cylinder(h = 10 - __SMALL_HINGE__GEAR_OFFSET_HEIGHT, r = HINGE_GEAR_OUTER_RADIUS);
     }
 
-    translate([ 0, -w / 2, INNER_STAND_FLOOR_ELEVATION ])
-        cube([ __SMALL_HINGE__THICKNESS / 2, w, r - INNER_STAND_FLOOR_ELEVATION - __SMALL_HINGE__THICKNESS / 2 ]);
-}
-
-scale(MAIN_SCALE) union()
-{
-    inner_stand();
+    translate([ 0, 0, 0.5 ]) cube([ 8, 8, 1 ], center = true);
 
     difference()
     {
@@ -219,8 +185,29 @@ scale(MAIN_SCALE) union()
             {
                 union()
                 {
-                    lid_inner_part(CUBE_EDGE_LENGTH, HALF_LID_R);
-                    lid_inner_part(OUTER_SHELL_INNER_WIDTH, LIP_R);
+                    difference()
+                    {
+                        translate([ __SMALL_HINGE__THICKNESS / 2, 0, -__SMALL_HINGE__THICKNESS / 2 ])
+                            rotate([ 90, 0, 0 ]) cylinder(h = CUBE_EDGE_LENGTH, r = HALF_LID_R, center = true);
+
+                        translate([ LARGE_VALUE / 2 + CUBE_EDGE_LENGTH / 2, 0, 0 ])
+                            cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
+                        translate([ -LARGE_VALUE / 2 + __SMALL_HINGE__THICKNESS / 2, 0, 0 ])
+                            cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
+                        translate([ 0, 0, -LARGE_VALUE / 2 + INNER_STAND_FLOOR_ELEVATION ])
+                            cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
+                    }
+
+                    translate([ 0, -CUBE_EDGE_LENGTH / 2, INNER_STAND_FLOOR_ELEVATION ]) cube([
+                        __SMALL_HINGE__THICKNESS / 2, CUBE_EDGE_LENGTH,
+                        HALF_LID_R - INNER_STAND_FLOOR_ELEVATION - __SMALL_HINGE__THICKNESS / 2
+                    ]);
+
+                    translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
+                        OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH,
+                        LIP_R - __SMALL_HINGE__THICKNESS / 2 + BASE_HEIGHT -
+                        OUTER_SHELL_THICKNESS
+                    ]);
                 }
                 sphere(OUTER_SHELL_THICKNESS);
             }
@@ -246,3 +233,23 @@ scale(MAIN_SCALE) union()
         lats();
     }
 }
+
+// translate([ __SMALL_HINGE__THICKNESS / 2, 0, -__SMALL_HINGE__THICKNESS / 2 ]) rotate([ 90, 0, 0 ])
+//     cylinder(h = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON, r = __SMALL_HINGE__THICKNESS /
+//     2,
+//  center = true);
+
+// main_cube_on_stand();
+
+// translate([ 0, 0, 1 + INNER_STAND_THICKNESS ]) difference()
+// {
+//     minkowski()
+//     {
+//         cube([CUBE_EDGE_LENGTH + ]);
+//         cylinder(h = 1, r = r);
+//         (INNER_STAND_THICKNESS); t
+//     }
+
+//     main_cube();
+//     translate([ 0, 0, LARGE_VALUE/2 + INNER_STAND_LIP_HEIGHT ]) cube(LARGE_VALUE, center = true);
+// }
