@@ -46,7 +46,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 // CUBE_EDGE_LENGTH = 28; // 6mm scale bucolic cube frame
 MAIN_SCALE = 2;
-CUBE_EDGE_LENGTH = 56 / MAIN_SCALE; // YS3M
+CUBE_EDGE_LENGTH = 57 / MAIN_SCALE; // YS3M
 
 $fn = 180;
 OPENING_ANGLE_EACH_SIDE = 75;
