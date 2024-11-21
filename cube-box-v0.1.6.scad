@@ -5,21 +5,6 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
-## (v0.2.0 TODO)
-
-- Decompose into multiple parts that can be swapped out for differently sized cubes / when there is wear
-
-## (v0.1.x TODO)
-
-- Set the hinge to 7.5mm scale, include two mid-bars and three gear sections.
-- Add rails to help keep the inner stand level.
-- Add plugs and ports compatible with Moyu box stacking (and also match the height and width?)
-- Snug/soft top corner cube holders (similar to Sebestény cube box corners)?
-- Interlocking or clasping top
-  - Support a spring-loaded release?
-- Reduce the profile of the inner stand.
-- Increase cube edge length slightly to fit cubes just over 56mm
-
 ## v0.1.5
 
 - Lower the shell for the stand.
