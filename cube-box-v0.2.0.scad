@@ -1,8 +1,8 @@
-VERSION_TEXT = "v0.1.6";
+VERSION_TEXT = "v0.2.0";
 
 MAIN_SCALE = 1;
-CUBE_EDGE_LENGTH = 57;        // mm
-OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
+CUBE_EDGE_LENGTH = 57;       // mm
+OPENING_ANGLE_EACH_SIDE = 0; // Avoid setting to 0 for printing unless you want overly shaved lids
 
 INCLUDE_INNER_STAND_ENGRAVING = false;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
@@ -18,6 +18,10 @@ include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.2.0
+
+- Slim the gears to 5mm scale to decrease the box height.
 
 ## v0.1.6
 
@@ -51,24 +55,24 @@ include <./node_modules/scad/small_hinge.scad>
 
 */
 
-INTERNAL_MAIN_SCALE = 2 * MAIN_SCALE;
-INTERNAL_CUBE_EDGE_LENGTH = CUBE_EDGE_LENGTH / 2; // YS3M
+INTERNAL_MAIN_SCALE = MAIN_SCALE;
+INTERNAL_CUBE_EDGE_LENGTH = CUBE_EDGE_LENGTH; // YS3M
 
-DEFAULT_CLEARANCE = 0.2 / INTERNAL_MAIN_SCALE;
-MAIN_CLEARANCE_SCALE = 1 / INTERNAL_MAIN_SCALE;
+DEFAULT_CLEARANCE = 0.1;
+MAIN_CLEARANCE_SCALE = 0.5;
 
 LARGE_VALUE = 200;
 
-INNER_STAND_BASE_THICKNESS = 1;
-INNER_STAND_LIP_THICKNESS = 0.75;
-INNER_STAND_LIP_HEIGHT = 4;
+INNER_STAND_BASE_THICKNESS = 2.5;
+INNER_STAND_LIP_THICKNESS = 1.55;
+INNER_STAND_LIP_HEIGHT = 8;
 INNER_STAND_FLOOR_ELEVATION = INNER_STAND_BASE_THICKNESS;
 
 ENGRAVING_LEVEL_DEPTH = 0.1;
 
 LAT_WIDTH = 4;
 
-OUTER_SHELL_THICKNESS = 0.75;
+OUTER_SHELL_THICKNESS = 1.5;
 
 module main_cube()
 {
@@ -87,7 +91,7 @@ BASE_EXTRA_HEIGHT_FOR_GEARS = 0.5; // This is slightly less than the gears stick
 BASE_HEIGHT = __SMALL_HINGE__THICKNESS + BASE_EXTRA_HEIGHT_FOR_GEARS;
 
 BASE_LATTICE_OFFSET = __SMALL_HINGE__THICKNESS + DEFAULT_CLEARANCE * 2;
-BASE_LATTICE_COMPLEMENT_OFFSET = __SMALL_HINGE__THICKNESS - DEFAULT_CLEARANCE * 2;
+BASE_LATTICE_COMPLEMENT_OFFSET = __SMALL_HINGE__THICKNESS - DEFAULT_CLEARANCE;
 
 module rotate_opening_angle()
 {
@@ -106,14 +110,14 @@ module rotate_opening_angle_left()
 module lat(i, mirror_scale)
 {
     scale([ mirror_scale, 1, 1 ]) translate([
-        BASE_LATTICE_COMPLEMENT_OFFSET - _EPSILON, i * LAT_WIDTH + LAT_WIDTH / 4 + mirror_scale - DEFAULT_CLEARANCE,
-        -BASE_HEIGHT -
+        BASE_LATTICE_COMPLEMENT_OFFSET - _EPSILON,
+        i * LAT_WIDTH * 2 + LAT_WIDTH / 2 + mirror_scale * LAT_WIDTH / 2 - DEFAULT_CLEARANCE, -BASE_HEIGHT -
         _EPSILON
     ])
         cube([
             OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS + _EPSILON - BASE_LATTICE_COMPLEMENT_OFFSET +
                 2 * _EPSILON,
-            LAT_WIDTH / 2 + DEFAULT_CLEARANCE * 2, BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
+            LAT_WIDTH + DEFAULT_CLEARANCE * 2, BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
             DEFAULT_CLEARANCE
         ]);
 }
@@ -197,8 +201,8 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
                     cube(LARGE_VALUE, center = true);
             }
 
-            translate([
-                -__SMALL_HINGE__THICKNESS, -__SMALL_HINGE__THICKNESS + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE,
+            duplicate_and_mirror([ 0, 1, 0 ]) translate([
+                -__SMALL_HINGE__THICKNESS, -__SMALL_HINGE__THICKNESS + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + 15,
                 -__SMALL_HINGE__THICKNESS / 2
             ])
                 cube([
@@ -235,18 +239,28 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
                 translate([ BASE_LATTICE_OFFSET, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ])
                     cube([ OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_OFFSET, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
 
-                duplicate_and_mirror([ 0, 1, 0 ]) translate([ __SMALL_HINGE__THICKNESS, 5, -BASE_HEIGHT ]) cube([
-                    OUTER_SHELL_INNER_WIDTH / 2 - __SMALL_HINGE__THICKNESS, OUTER_SHELL_INNER_WIDTH / 2 - 5,
+                duplicate_and_mirror([ 0, 1, 0 ]) translate([ __SMALL_HINGE__THICKNESS, 5 + 15, -BASE_HEIGHT ]) cube([
+                    OUTER_SHELL_INNER_WIDTH / 2 - __SMALL_HINGE__THICKNESS, OUTER_SHELL_INNER_WIDTH / 2 - 5 - 15,
                     BASE_HEIGHT
                 ]);
+                duplicate_and_mirror([ 0, 1, 0 ]) translate([ __SMALL_HINGE__THICKNESS, 0, -BASE_HEIGHT ])
+                    cube([ OUTER_SHELL_INNER_WIDTH / 2 - __SMALL_HINGE__THICKNESS, 10, BASE_HEIGHT ]);
+                // duplicate_and_mirror([ 0, 1, 0 ]) translate([ __SMALL_HINGE__THICKNESS, 5 - 15, -BASE_HEIGHT ])
+                // cube([
+                //     OUTER_SHELL_INNER_WIDTH / 2 - __SMALL_HINGE__THICKNESS, OUTER_SHELL_INNER_WIDTH / 2 - 5,
+                //     BASE_HEIGHT
+                // ]);
             }
 
-            rotate([ 90, 0, 0 ]) translate([ 0, -__SMALL_HINGE__THICKNESS, -15 ])
+            rotate([ 90, 0, 0 ]) translate([ 0, -__SMALL_HINGE__THICKNESS, 0 ])
                 small_hinge_30mm(rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
                                  plug_clearance_scale = 1, round_far_side = true);
-        };
 
-        translate([ 0, 0, -__SMALL_HINGE__THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
+            rotate([ 90, 0, 0 ]) translate([ 0, -__SMALL_HINGE__THICKNESS, -30 ])
+                small_hinge_30mm(rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
+                                 plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 22.5);
+        };
+        translate([ 0, 15, -__SMALL_HINGE__THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
             engraving_text(VERSION_TEXT, 0);
 
         lats();
