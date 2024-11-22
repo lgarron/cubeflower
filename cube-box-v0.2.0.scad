@@ -1,8 +1,8 @@
 VERSION_TEXT = "v0.2.0";
 
 MAIN_SCALE = 1;
-CUBE_EDGE_LENGTH = 57;       // mm
-OPENING_ANGLE_EACH_SIDE = 0; // Avoid setting to 0 for printing unless you want overly shaved lids
+CUBE_EDGE_LENGTH = 57;        // mm
+OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 
 INCLUDE_INNER_STAND_ENGRAVING = false;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
@@ -10,7 +10,8 @@ INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 DEBUG = false;
 SET_ON_SIDE_FOR_PRINTING = !DEBUG;
 
-$fn = DEBUG ? 64 : 360;
+$fn = DEBUG ? 64 : 90;
+LID_TOP_FN = DEBUG ? 64 : 360;
 
 include <./node_modules/scad/duplicate_and_mirror.scad>
 include <./node_modules/scad/minkowski_shell.scad>
@@ -68,7 +69,7 @@ INNER_STAND_LIP_THICKNESS = 1.55;
 INNER_STAND_LIP_HEIGHT = 8;
 INNER_STAND_FLOOR_ELEVATION = INNER_STAND_BASE_THICKNESS;
 
-ENGRAVING_LEVEL_DEPTH = 0.1;
+ENGRAVING_LEVEL_DEPTH = 0.2;
 
 LAT_WIDTH = 4;
 
@@ -154,7 +155,7 @@ module lid_part(w, d, h)
     difference()
     {
         translate([ __SMALL_HINGE__THICKNESS / 2, 0, -__SMALL_HINGE__THICKNESS / 2 ]) rotate([ 90, 0, 0 ])
-            cylinder(h = d, r = lid_radius, center = true);
+            cylinder(h = d, r = lid_radius, center = true, $fn = LID_TOP_FN);
 
         translate([ LARGE_VALUE / 2 + w, 0, 0 ]) cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
         translate([ -LARGE_VALUE / 2 + __SMALL_HINGE__THICKNESS / 2, 0, 0 ])
@@ -167,11 +168,11 @@ module lid_part(w, d, h)
         cube([ __SMALL_HINGE__THICKNESS / 2, d, lid_radius - lid_radius_h + h ]);
 }
 
-engraving_depth = 0.25;
+VERSTION_TEXT_ENGRAVING_DEPTH = 0.25;
 
 module engraving_text(text_string, _epsilon, halign = "center")
 {
-    translate([ 0, 0, -engraving_depth ]) linear_extrude(engraving_depth + _epsilon)
+    translate([ 0, 0, -VERSTION_TEXT_ENGRAVING_DEPTH ]) linear_extrude(VERSTION_TEXT_ENGRAVING_DEPTH + _epsilon)
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
@@ -219,12 +220,15 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
 
         if (INCLUDE_INNER_STAND_ENGRAVING)
         {
-            render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH ])
-                linear_extrude(ENGRAVING_LEVEL_DEPTH + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
-                    import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level1");
-            render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH * 2 ])
-                linear_extrude(ENGRAVING_LEVEL_DEPTH * 2 + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
-                    import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level2");
+            render() union()
+            {
+                render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH ])
+                    linear_extrude(ENGRAVING_LEVEL_DEPTH + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
+                        import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level1");
+                render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH * 2 ])
+                    linear_extrude(ENGRAVING_LEVEL_DEPTH * 2 + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
+                        import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level2");
+            }
         }
 
         debug_quarter_negative();
