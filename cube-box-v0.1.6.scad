@@ -1,10 +1,13 @@
 VERSION_TEXT = "v0.1.6";
 
 MAIN_SCALE = 1;
-CUBE_EDGE_LENGTH = 57; // mm
+CUBE_EDGE_LENGTH = 57;        // mm
 OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 
 SET_ON_SIDE_FOR_PRINTING = true;
+
+INCLUDE_INNER_STAND_ENGRAVING = false;
+INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
 $fn = 180;
 
@@ -21,6 +24,7 @@ include <./node_modules/scad/small_hinge.scad>
 - Shave hinge blocks and lids.
 - Add version engraving.
 - Add `SET_ON_SIDE_FOR_PRINTING` parameter.
+- Add an optional inner stand engraving.
 
 ## v0.1.5
 
@@ -47,8 +51,7 @@ include <./node_modules/scad/small_hinge.scad>
 */
 
 INTERNAL_MAIN_SCALE = 2 * MAIN_SCALE;
-INTERNAL_CUBE_EDGE_LENGTH = CUBE_EDGE_LENGTH/2; // YS3M
-
+INTERNAL_CUBE_EDGE_LENGTH = CUBE_EDGE_LENGTH / 2; // YS3M
 
 DEFAULT_CLEARANCE = 0.2 / INTERNAL_MAIN_SCALE;
 MAIN_CLEARANCE_SCALE = 1 / INTERNAL_MAIN_SCALE;
@@ -59,6 +62,8 @@ INNER_STAND_BASE_THICKNESS = 2;
 INNER_STAND_LIP_THICKNESS = 1;
 INNER_STAND_LIP_HEIGHT = 3.5;
 INNER_STAND_FLOOR_ELEVATION = INNER_STAND_BASE_THICKNESS - INNER_STAND_LIP_THICKNESS;
+
+ENGRAVING_LEVEL_DEPTH = 0.1;
 
 module main_cube()
 {
@@ -132,7 +137,7 @@ module lats()
 //     sphere(INNER_STAND_LIP_THICKNESS);
 // }
 
-HALF_LID_EXTRA_HEIGHT = 1;
+HALF_LID_EXTRA_HEIGHT = INNER_STAND_BASE_THICKNESS - INNER_STAND_LIP_THICKNESS; // Is this right?
 
 module lid_part(w, d, h)
 {
@@ -165,29 +170,42 @@ module engraving_text(text_string, _epsilon, halign = "center")
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
-rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0])
-scale(INTERNAL_MAIN_SCALE) union()
+rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
 {
-    difference()
+    render() difference()
     {
-        translate([ 0, 0, INNER_STAND_LIP_THICKNESS ]) difference()
+        render() union()
         {
-            minkowski()
+            // TODO: `INNER_STAND_LIP_THICKNESS` is wrong here?
+            translate([ 0, 0, INNER_STAND_LIP_THICKNESS ]) difference()
             {
-                main_cube();
-                sphere(INNER_STAND_LIP_THICKNESS - DEFAULT_CLEARANCE);
+                minkowski()
+                {
+                    main_cube();
+                    sphere(INNER_STAND_LIP_THICKNESS - DEFAULT_CLEARANCE);
+                }
+
+                main_cube_on_stand();
+                translate([ 0, 0, LARGE_VALUE / 2 + INNER_STAND_LIP_HEIGHT ]) cube(LARGE_VALUE, center = true);
             }
 
-            main_cube_on_stand();
-            translate([ 0, 0, LARGE_VALUE / 2 + INNER_STAND_LIP_HEIGHT ]) cube(LARGE_VALUE, center = true);
+            translate([ 0, 0, 0.5 ]) cube([ 8, 8, 1 ], center = true);
         }
 
         duplicate_and_mirror() duplicate_and_mirror([ 0, 1, 0 ])
             translate([ __SMALL_HINGE__THICKNESS / 2, -OUTER_SHELL_INNER_WIDTH / 2, -__SMALL_HINGE__THICKNESS / 2 ])
                 rotate([ -90, 0, 0 ]) cylinder(h = 10 - __SMALL_HINGE__GEAR_OFFSET_HEIGHT, r = HINGE_GEAR_OUTER_RADIUS);
-    }
 
-    translate([ 0, 0, 0.5 ]) cube([ 8, 8, 1 ], center = true);
+        if (INCLUDE_INNER_STAND_ENGRAVING)
+        {
+            render() translate([ 0, 0, 1 + INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH ])
+                linear_extrude(ENGRAVING_LEVEL_DEPTH + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
+                    import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level1");
+            render() translate([ 0, 0, 1 + INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH * 2 ])
+                linear_extrude(ENGRAVING_LEVEL_DEPTH * 2 + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
+                    import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level2");
+        }
+    }
 
     difference()
     {
@@ -224,7 +242,8 @@ scale(INTERNAL_MAIN_SCALE) union()
             {
                 union()
                 {
-                    lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH, HALF_LID_EXTRA_HEIGHT + INTERNAL_CUBE_EDGE_LENGTH);
+                    lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH,
+                             HALF_LID_EXTRA_HEIGHT + INTERNAL_CUBE_EDGE_LENGTH);
                     lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
                              INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
 
