@@ -224,12 +224,9 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
         {
             render() union()
             {
-                render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH ])
-                    linear_extrude(ENGRAVING_LEVEL_DEPTH + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
-                        import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level1");
                 render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH * 2 ])
                     linear_extrude(ENGRAVING_LEVEL_DEPTH * 2 + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
-                        import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level2");
+                        import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
             }
         }
 
