@@ -1,4 +1,4 @@
-VERSION_TEXT = "v0.2.0";
+VERSION_TEXT = "v0.2.1";
 
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
@@ -20,6 +20,10 @@ include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.2.1
+
+- Fix 180° rotational symmetry for the hinge gears.
 
 ## v0.2.0
 
@@ -255,13 +259,13 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
                 // ]);
             }
 
-            rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ])
-                small_hinge_30mm(main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
-                                 main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true);
+            rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) small_hinge_30mm(
+                main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
+                main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
 
             rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, -30 ]) small_hinge_30mm(
                 main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
-                main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 22.5);
+                main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
         };
         translate([ 0, 15, -HINGE_THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
             engraving_text(VERSION_TEXT, 0);
