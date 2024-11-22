@@ -204,12 +204,12 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
                     cube(LARGE_VALUE, center = true);
             }
 
-            duplicate_and_mirror([ 0, 1, 0 ]) translate(
-                [ -HINGE_THICKNESS, -HINGE_THICKNESS - 10 - __SMALL_HINGE__GEAR_OFFSET_HEIGHT, -HINGE_THICKNESS / 2 ])
-                cube([
-                    HINGE_THICKNESS * 2, 10 + __SMALL_HINGE__GEAR_OFFSET_HEIGHT * 2, HINGE_THICKNESS / 2 +
-                    INNER_STAND_FLOOR_ELEVATION
-                ]);
+            duplicate_and_mirror([ 0, 1, 0 ])
+                translate([ -HINGE_THICKNESS, 10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE, -HINGE_THICKNESS / 2 ])
+                    cube([
+                        HINGE_THICKNESS * 2, 10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE, HINGE_THICKNESS / 2 +
+                        INNER_STAND_FLOOR_ELEVATION
+                    ]);
         }
 
         duplicate_and_mirror() duplicate_and_mirror([ 0, 1, 0 ])
