@@ -37,6 +37,7 @@ $fn = 180;
 OPENING_ANGLE_EACH_SIDE = 75;
 
 DEFAULT_CLEARANCE = 0.1;
+MAIN_CLEARANCE_SCALE = 1 / MAIN_SCALE;
 
 LARGE_VALUE = 200;
 
@@ -182,7 +183,7 @@ scale(MAIN_SCALE) union()
 
             rotate([ 90, 0, 0 ]) translate([ 0, -__SMALL_HINGE__THICKNESS, -15 ])
                 small_hinge_30mm(rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
-                                 plug_clearance_scale = 1, round_far_side = true, shave_middle = false);
+                                 plug_clearance_scale = 1, round_far_side = true);
         }
         lats();
     }
@@ -225,6 +226,8 @@ scale(MAIN_SCALE) union()
                 round_bevel_complement(height = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
                                        radius = __SMALL_HINGE__THICKNESS / 2, center_z = true);
         }
+
+        cube([2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE], center=true);
 
         lats();
     }
