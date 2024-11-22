@@ -4,12 +4,13 @@ MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57;        // mm
 OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 
-SET_ON_SIDE_FOR_PRINTING = true;
-
 INCLUDE_INNER_STAND_ENGRAVING = false;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
-$fn = 180;
+DEBUG = false;
+SET_ON_SIDE_FOR_PRINTING = !DEBUG;
+
+$fn = DEBUG ? 64 : 360;
 
 include <./node_modules/scad/duplicate_and_mirror.scad>
 include <./node_modules/scad/minkowski_shell.scad>
@@ -58,12 +59,16 @@ MAIN_CLEARANCE_SCALE = 1 / INTERNAL_MAIN_SCALE;
 
 LARGE_VALUE = 200;
 
-INNER_STAND_BASE_THICKNESS = 2;
-INNER_STAND_LIP_THICKNESS = 1;
-INNER_STAND_LIP_HEIGHT = 3.5;
-INNER_STAND_FLOOR_ELEVATION = INNER_STAND_BASE_THICKNESS - INNER_STAND_LIP_THICKNESS;
+INNER_STAND_BASE_THICKNESS = 1.5;
+INNER_STAND_LIP_THICKNESS = 0.75;
+INNER_STAND_LIP_HEIGHT = 4;
+INNER_STAND_FLOOR_ELEVATION = INNER_STAND_BASE_THICKNESS;
 
 ENGRAVING_LEVEL_DEPTH = 0.1;
+
+LAT_WIDTH = 4;
+
+OUTER_SHELL_THICKNESS = 0.75;
 
 module main_cube()
 {
@@ -78,17 +83,11 @@ HINGE_GEAR_OUTER_RADIUS = 6.4 / 2;
 
 OUTER_SHELL_INNER_WIDTH = INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
 
-// translate([ 0, -INTERNAL_CUBE_EDGE_LENGTH / 2 + 5 - INNER_STAND_LIP_THICKNESS, 0.5 ]) cube([ 10, 10, 1 ], center = true);
-
-// round_bevel_complement(20, 10, center_z = true);
-
 BASE_EXTRA_HEIGHT_FOR_GEARS = 0.5; // This is slightly less than the gears stick out, but the impact is negligible.
 BASE_HEIGHT = __SMALL_HINGE__THICKNESS + BASE_EXTRA_HEIGHT_FOR_GEARS;
 
 BASE_LATTICE_OFFSET = __SMALL_HINGE__THICKNESS + DEFAULT_CLEARANCE * 2;
 BASE_LATTICE_COMPLEMENT_OFFSET = __SMALL_HINGE__THICKNESS - DEFAULT_CLEARANCE * 2;
-
-OUTER_SHELL_THICKNESS = 1;
 
 module rotate_opening_angle()
 {
@@ -107,37 +106,39 @@ module rotate_opening_angle_left()
 module lat(i, mirror_scale)
 {
     scale([ mirror_scale, 1, 1 ]) translate([
-        BASE_LATTICE_COMPLEMENT_OFFSET - _EPSILON, i * 4 + 1 + mirror_scale - DEFAULT_CLEARANCE, -BASE_HEIGHT - _EPSILON
+        BASE_LATTICE_COMPLEMENT_OFFSET - _EPSILON, i * LAT_WIDTH + LAT_WIDTH / 4 + mirror_scale - DEFAULT_CLEARANCE,
+        -BASE_HEIGHT -
+        _EPSILON
     ])
         cube([
             OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS + _EPSILON - BASE_LATTICE_COMPLEMENT_OFFSET +
                 2 * _EPSILON,
-            2 + DEFAULT_CLEARANCE * 2, BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
+            LAT_WIDTH / 2 + DEFAULT_CLEARANCE * 2, BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
             DEFAULT_CLEARANCE
         ]);
 }
 
 module lats()
 {
-
-    for (i = [-5:5])
+    render() union()
     {
-        rotate_opening_angle() lat(i, 1);
-        rotate_opening_angle_left() lat(i, -1);
+        for (i = [-5:5])
+        {
+            rotate_opening_angle() lat(i, 1);
+            rotate_opening_angle_left() lat(i, -1);
+        }
     }
 }
 
-// % minkowski()
-// {
-// % union()
-// {
-//     translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ])
-//         cube([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH + BASE_HEIGHT ]);
-// }
-//     sphere(INNER_STAND_LIP_THICKNESS);
-// }
+module debug_quarter_negative()
+{
+    if (DEBUG)
+    {
 
-HALF_LID_EXTRA_HEIGHT = INNER_STAND_BASE_THICKNESS - INNER_STAND_LIP_THICKNESS; // Is this right?
+        translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true); // TODO
+        translate([ 0, -LARGE_VALUE / 2, 0 ]) cube(LARGE_VALUE, center = true); // TODO
+    }
+}
 
 module lid_part(w, d, h)
 {
@@ -172,24 +173,40 @@ module engraving_text(text_string, _epsilon, halign = "center")
 
 rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
 {
+    if (DEBUG)
+    {
+#main_cube_on_stand();
+    }
+
     render() difference()
     {
         render() union()
         {
             // TODO: `INNER_STAND_LIP_THICKNESS` is wrong here?
-            translate([ 0, 0, INNER_STAND_LIP_THICKNESS ]) difference()
+            difference()
             {
                 minkowski()
                 {
                     main_cube();
-                    sphere(INNER_STAND_LIP_THICKNESS - DEFAULT_CLEARANCE);
+                    translate([ 0, 0, INNER_STAND_LIP_THICKNESS ])
+                        sphere(INNER_STAND_LIP_THICKNESS - DEFAULT_CLEARANCE);
                 }
 
                 main_cube_on_stand();
-                translate([ 0, 0, LARGE_VALUE / 2 + INNER_STAND_LIP_HEIGHT ]) cube(LARGE_VALUE, center = true);
+                translate([ 0, 0, LARGE_VALUE / 2 + INNER_STAND_FLOOR_ELEVATION + INNER_STAND_LIP_HEIGHT ])
+                    cube(LARGE_VALUE, center = true);
             }
 
-            translate([ 0, 0, 0.5 ]) cube([ 8, 8, 1 ], center = true);
+            translate([
+                -__SMALL_HINGE__THICKNESS, -__SMALL_HINGE__THICKNESS + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE,
+                -__SMALL_HINGE__THICKNESS / 2
+            ])
+                cube([
+                    __SMALL_HINGE__THICKNESS * 2,
+                    __SMALL_HINGE__THICKNESS * 2 - __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE * 2,
+                    __SMALL_HINGE__THICKNESS / 2 +
+                    INNER_STAND_FLOOR_ELEVATION
+                ]);
         }
 
         duplicate_and_mirror() duplicate_and_mirror([ 0, 1, 0 ])
@@ -198,13 +215,15 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
 
         if (INCLUDE_INNER_STAND_ENGRAVING)
         {
-            render() translate([ 0, 0, 1 + INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH ])
+            render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH ])
                 linear_extrude(ENGRAVING_LEVEL_DEPTH + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
                     import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level1");
-            render() translate([ 0, 0, 1 + INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH * 2 ])
+            render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH * 2 ])
                 linear_extrude(ENGRAVING_LEVEL_DEPTH * 2 + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
                     import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true, layer = "level2");
         }
+
+        debug_quarter_negative();
     }
 
     difference()
@@ -231,6 +250,7 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
             engraving_text(VERSION_TEXT, 0);
 
         lats();
+        debug_quarter_negative();
     }
 
     difference()
@@ -242,13 +262,13 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
             {
                 union()
                 {
-                    lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH,
-                             HALF_LID_EXTRA_HEIGHT + INTERNAL_CUBE_EDGE_LENGTH);
+                    lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH, INTERNAL_CUBE_EDGE_LENGTH);
                     lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
                              INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
 
-                    translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ])
-                        cube([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
+                    translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
+                        OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + INNER_STAND_FLOOR_ELEVATION
+                    ]);
                 }
 
                 sphere(OUTER_SHELL_THICKNESS);
@@ -276,5 +296,6 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
         cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
 
         lats();
+        debug_quarter_negative();
     }
 }
