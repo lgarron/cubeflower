@@ -1,3 +1,5 @@
+VERSION_TEXT = "v0.1.6";
+
 include <./node_modules/scad/duplicate_and_mirror.scad>
 include <./node_modules/scad/minkowski_shell.scad>
 include <./node_modules/scad/round_bevel.scad>
@@ -34,7 +36,7 @@ MAIN_SCALE = 2;
 CUBE_EDGE_LENGTH = 57 / MAIN_SCALE; // YS3M
 
 $fn = 180;
-OPENING_ANGLE_EACH_SIDE = 0;
+OPENING_ANGLE_EACH_SIDE = 75;
 
 DEFAULT_CLEARANCE = 0.1;
 MAIN_CLEARANCE_SCALE = 1 / MAIN_SCALE;
@@ -143,6 +145,14 @@ module lid_part(w, d, h)
         cube([ __SMALL_HINGE__THICKNESS / 2, d, lid_radius - lid_radius_h + h ]);
 }
 
+engraving_depth = 0.25;
+
+module engraving_text(text_string, _epsilon, halign = "center")
+{
+    translate([ 0, 0, -engraving_depth ]) linear_extrude(engraving_depth + _epsilon)
+        text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
+}
+
 scale(MAIN_SCALE) union()
 {
     difference()
@@ -184,7 +194,11 @@ scale(MAIN_SCALE) union()
             rotate([ 90, 0, 0 ]) translate([ 0, -__SMALL_HINGE__THICKNESS, -15 ])
                 small_hinge_30mm(rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
                                  plug_clearance_scale = 1, round_far_side = true);
-        }
+        };
+
+        translate([ 0, 0, -__SMALL_HINGE__THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
+            engraving_text(VERSION_TEXT, 0);
+
         lats();
     }
 
@@ -227,7 +241,7 @@ scale(MAIN_SCALE) union()
                                        radius = __SMALL_HINGE__THICKNESS / 2, center_z = true);
         }
 
-        cube([2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE], center=true);
+        cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
 
         lats();
     }
