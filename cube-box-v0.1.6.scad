@@ -4,6 +4,8 @@ MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
 OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 
+SET_ON_SIDE_FOR_PRINTING = true;
+
 $fn = 180;
 
 include <./node_modules/scad/duplicate_and_mirror.scad>
@@ -18,6 +20,7 @@ include <./node_modules/scad/small_hinge.scad>
 - Make the hinge gears rotationally symmetrical to allow box bottoms to be stacked in either orientation.
 - Shave hinge blocks and lids.
 - Add version engraving.
+- Add `SET_ON_SIDE_FOR_PRINTING` parameter.
 
 ## v0.1.5
 
@@ -162,6 +165,7 @@ module engraving_text(text_string, _epsilon, halign = "center")
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
+rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0])
 scale(INTERNAL_MAIN_SCALE) union()
 {
     difference()
