@@ -1,11 +1,23 @@
 VERSION_TEXT = "v0.1.6";
 
+MAIN_SCALE = 1;
+CUBE_EDGE_LENGTH = 57; // mm
+OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
+
+$fn = 180;
+
 include <./node_modules/scad/duplicate_and_mirror.scad>
 include <./node_modules/scad/minkowski_shell.scad>
 include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.1.6
+
+- Make the hinge gears rotationally symmetrical to allow box bottoms to be stacked in either orientation.
+- Shave hinge blocks and lids.
+- Add version engraving.
 
 ## v0.1.5
 
@@ -31,15 +43,12 @@ include <./node_modules/scad/small_hinge.scad>
 
 */
 
-// CUBE_EDGE_LENGTH = 28; // 6mm scale bucolic cube frame
-MAIN_SCALE = 2;
-CUBE_EDGE_LENGTH = 57 / MAIN_SCALE; // YS3M
+INTERNAL_MAIN_SCALE = 2 * MAIN_SCALE;
+INTERNAL_CUBE_EDGE_LENGTH = CUBE_EDGE_LENGTH/2; // YS3M
 
-$fn = 180;
-OPENING_ANGLE_EACH_SIDE = 75;
 
-DEFAULT_CLEARANCE = 0.1;
-MAIN_CLEARANCE_SCALE = 1 / MAIN_SCALE;
+DEFAULT_CLEARANCE = 0.2 / INTERNAL_MAIN_SCALE;
+MAIN_CLEARANCE_SCALE = 1 / INTERNAL_MAIN_SCALE;
 
 LARGE_VALUE = 200;
 
@@ -50,7 +59,7 @@ INNER_STAND_FLOOR_ELEVATION = INNER_STAND_BASE_THICKNESS - INNER_STAND_LIP_THICK
 
 module main_cube()
 {
-    translate([ 0, 0, CUBE_EDGE_LENGTH / 2 ]) cube(CUBE_EDGE_LENGTH, center = true);
+    translate([ 0, 0, INTERNAL_CUBE_EDGE_LENGTH / 2 ]) cube(INTERNAL_CUBE_EDGE_LENGTH, center = true);
 };
 module main_cube_on_stand()
 {
@@ -59,9 +68,9 @@ module main_cube_on_stand()
 
 HINGE_GEAR_OUTER_RADIUS = 6.4 / 2;
 
-OUTER_SHELL_INNER_WIDTH = CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
+OUTER_SHELL_INNER_WIDTH = INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
 
-// translate([ 0, -CUBE_EDGE_LENGTH / 2 + 5 - INNER_STAND_LIP_THICKNESS, 0.5 ]) cube([ 10, 10, 1 ], center = true);
+// translate([ 0, -INTERNAL_CUBE_EDGE_LENGTH / 2 + 5 - INNER_STAND_LIP_THICKNESS, 0.5 ]) cube([ 10, 10, 1 ], center = true);
 
 // round_bevel_complement(20, 10, center_z = true);
 
@@ -153,7 +162,7 @@ module engraving_text(text_string, _epsilon, halign = "center")
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
-scale(MAIN_SCALE) union()
+scale(INTERNAL_MAIN_SCALE) union()
 {
     difference()
     {
@@ -211,9 +220,9 @@ scale(MAIN_SCALE) union()
             {
                 union()
                 {
-                    lid_part(CUBE_EDGE_LENGTH / 2, CUBE_EDGE_LENGTH, HALF_LID_EXTRA_HEIGHT + CUBE_EDGE_LENGTH);
-                    lid_part(CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
-                             CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
+                    lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH, HALF_LID_EXTRA_HEIGHT + INTERNAL_CUBE_EDGE_LENGTH);
+                    lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
+                             INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
 
                     translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ])
                         cube([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
