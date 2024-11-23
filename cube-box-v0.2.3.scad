@@ -1,4 +1,4 @@
-VERSION_TEXT = "v0.2.2";
+VERSION_TEXT = "v0.2.3";
 OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 DEBUG = false;
 INCLUDE_INNER_STAND_ENGRAVING = false;
