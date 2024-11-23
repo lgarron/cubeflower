@@ -26,6 +26,7 @@ include <./node_modules/scad/small_hinge.scad>
 - Decrease engraving depth.
 - Increase lat clearance for lower-friction end motion.
 - Add a rounded bottom side to test push-down closing.
+- Add thumb divots to the lid tops.
 
 ## v0.2.2
 
@@ -107,6 +108,7 @@ module main_cube_on_stand()
 HINGE_GEAR_OUTER_RADIUS = 6.4 / 5 * HINGE_THICKNESS / 2;
 
 OUTER_SHELL_INNER_WIDTH = INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
+OUTER_SHELL_OUTER_WIDTH = OUTER_SHELL_INNER_WIDTH + OUTER_SHELL_THICKNESS;
 
 BASE_EXTRA_HEIGHT_FOR_GEARS =
     1.4 / 5 * HINGE_THICKNESS / 2; // This is slightly less than the gears stick out, but the impact is negligible.
@@ -223,6 +225,11 @@ module bottom_rounding_negative()
         }
     }
 }
+
+THUMB_DIVOT_RADIUS = 20;
+THUMB_DIVOT_DEPTH = 0.75;
+THUMB_DIVOT_X = CUBE_EDGE_LENGTH * 0.35;
+THUMB_DIVOT_Y = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH * 0.92;
 
 module inner_stand()
 {
@@ -366,6 +373,11 @@ module lids()
             translate([ 0, 0, -HINGE_THICKNESS ]) rotate([ 90, 0, 0 ])
                 round_bevel_complement(height = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
                                        radius = HINGE_THICKNESS / 2, center_z = true);
+
+            duplicate_and_mirror([ 0, 1, 0 ]) translate([
+                THUMB_DIVOT_X, -CUBE_EDGE_LENGTH / 2 - OUTER_SHELL_THICKNESS - THUMB_DIVOT_RADIUS + THUMB_DIVOT_DEPTH,
+                THUMB_DIVOT_Y
+            ]) sphere(THUMB_DIVOT_RADIUS);
         }
 
         cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
