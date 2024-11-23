@@ -1,14 +1,13 @@
 VERSION_TEXT = "v0.2.2";
+OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
+DEBUG = false;
+INCLUDE_INNER_STAND_ENGRAVING = false;
 
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
 
-OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
-
-INCLUDE_INNER_STAND_ENGRAVING = false;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
-DEBUG = false;
 SET_ON_SIDE_FOR_PRINTING = !DEBUG;
 
 $fn = DEBUG ? 64 : 90;
