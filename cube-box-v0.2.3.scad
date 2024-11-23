@@ -24,6 +24,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v0.2.3
 
 - Move the inner stand clearance to the inside and increase to 0.25mm.
+- Decrease engraving depth.
 
 ## v0.2.2
 
@@ -86,7 +87,7 @@ INNER_STAND_LIP_THICKNESS = 1.5;
 INNER_STAND_LIP_HEIGHT = 8;
 INNER_STAND_FLOOR_ELEVATION = INNER_STAND_BASE_THICKNESS;
 
-ENGRAVING_LEVEL_DEPTH = 0.2;
+ENGRAVING_LEVEL_DEPTH = 0.15;
 
 LAT_WIDTH = 4;
 
