@@ -196,6 +196,35 @@ module engraving_text(text_string, _epsilon, halign = "center")
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
+BOTTOM_ROUNDING_RADIUS = 10;
+
+module bottom_rounding_negative()
+{
+    // TODO: make this work
+    render() duplicate_and_mirror() rotate_opening_angle() difference()
+    {
+        translate([
+            OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS - BOTTOM_ROUNDING_RADIUS,
+            -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON) / 2, -BASE_HEIGHT -
+            _EPSILON
+        ])
+            cube([
+                BOTTOM_ROUNDING_RADIUS + _EPSILON, OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
+                BOTTOM_ROUNDING_RADIUS +
+                _EPSILON
+            ]);
+
+        minkowski()
+        {
+            translate(
+                [ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT + OUTER_SHELL_THICKNESS ])
+                rotate([ 90, -90, 0 ])
+                    round_bevel_cylinder(OUTER_SHELL_INNER_WIDTH, BOTTOM_ROUNDING_RADIUS - OUTER_SHELL_THICKNESS);
+            sphere(OUTER_SHELL_THICKNESS);
+        }
+    }
+}
+
 module inner_stand()
 {
 
@@ -288,17 +317,6 @@ module hinge()
         debug_quarter_negative();
         bottom_rounding_negative();
     }
-}
-
-BOTTOM_ROUNDING_RADIUS = 10;
-
-module bottom_rounding_negative()
-{
-    duplicate_and_mirror() translate([
-        OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS, OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS, -
-        BASE_HEIGHT
-    ]) rotate([ 90, -90, 0 ])
-        round_bevel_complement(OUTER_SHELL_INNER_WIDTH + OUTER_SHELL_THICKNESS * 2, BOTTOM_ROUNDING_RADIUS);
 }
 
 module lids()
