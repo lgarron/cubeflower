@@ -1,4 +1,4 @@
-VERSION_TEXT = "v0.2.1";
+VERSION_TEXT = "v0.2.2";
 
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
@@ -20,6 +20,10 @@ include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.2.2
+
+- Restore clearance for the inner stand.
 
 ## v0.2.1
 
@@ -285,7 +289,8 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
                 {
                     lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH, INTERNAL_CUBE_EDGE_LENGTH);
                     lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
-                             INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
+                             INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2 + 2 * DEFAULT_CLEARANCE,
+                             INNER_STAND_LIP_HEIGHT);
 
                     translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
                         OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + INNER_STAND_FLOOR_ELEVATION
