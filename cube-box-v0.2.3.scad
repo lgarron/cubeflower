@@ -25,6 +25,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 - Move the inner stand clearance to the inside and increase to 0.25mm.
 - Decrease engraving depth.
+- Increase lat clearance for lower-friction end motion.
 
 ## v0.2.2
 
@@ -77,6 +78,7 @@ HINGE_THICKNESS = 5;
 
 DEFAULT_CLEARANCE = 0.1;
 MAIN_CLEARANCE_SCALE = 0.5;
+SLIDING_CLEARANCE = 0.2;
 
 INNER_STAND_LIP_CLEARANCE = 0.25;
 
@@ -129,13 +131,13 @@ module lat(i, mirror_scale)
 {
     scale([ mirror_scale, 1, 1 ]) translate([
         BASE_LATTICE_COMPLEMENT_OFFSET - _EPSILON,
-        i * LAT_WIDTH * 2 + LAT_WIDTH / 2 + mirror_scale * LAT_WIDTH / 2 - DEFAULT_CLEARANCE, -BASE_HEIGHT -
+        i * LAT_WIDTH * 2 + LAT_WIDTH / 2 + mirror_scale * LAT_WIDTH / 2 - SLIDING_CLEARANCE, -BASE_HEIGHT -
         _EPSILON
     ])
         cube([
             OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS + _EPSILON - BASE_LATTICE_COMPLEMENT_OFFSET +
                 2 * _EPSILON,
-            LAT_WIDTH + DEFAULT_CLEARANCE * 2, BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
+            LAT_WIDTH + SLIDING_CLEARANCE * 2, BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
             DEFAULT_CLEARANCE
         ]);
 }
