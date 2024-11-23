@@ -3,12 +3,12 @@ VERSION_TEXT = "v0.2.2";
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
 
-OPENING_ANGLE_EACH_SIDE = 0; // Avoid setting to 0 for printing unless you want overly shaved lids
+OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 
 INCLUDE_INNER_STAND_ENGRAVING = false;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
-DEBUG = true;
+DEBUG = false;
 SET_ON_SIDE_FOR_PRINTING = !DEBUG;
 
 $fn = DEBUG ? 64 : 90;
@@ -26,6 +26,7 @@ include <./node_modules/scad/small_hinge.scad>
 - Move the inner stand clearance to the inside and increase to 0.25mm.
 - Decrease engraving depth.
 - Increase lat clearance for lower-friction end motion.
+- Add a rounded bottom side to test push-down closing.
 
 ## v0.2.2
 
@@ -285,7 +286,19 @@ module hinge()
 
         lats();
         debug_quarter_negative();
+        bottom_rounding_negative();
     }
+}
+
+BOTTOM_ROUNDING_RADIUS = 10;
+
+module bottom_rounding_negative()
+{
+    duplicate_and_mirror() translate([
+        OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS, OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS, -
+        BASE_HEIGHT
+    ]) rotate([ 90, -90, 0 ])
+        round_bevel_complement(OUTER_SHELL_INNER_WIDTH + OUTER_SHELL_THICKNESS * 2, BOTTOM_ROUNDING_RADIUS);
 }
 
 module lids()
@@ -296,20 +309,27 @@ module lids()
 
         render() duplicate_and_mirror() rotate_opening_angle() difference()
         {
-            render() minkowski_shell()
+            union()
             {
-                union()
+                render() minkowski_shell()
                 {
-                    lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH, INTERNAL_CUBE_EDGE_LENGTH);
-                    lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
-                             INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
+                    union()
+                    {
+                        lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH, INTERNAL_CUBE_EDGE_LENGTH);
+                        lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
+                                 INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
 
-                    translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
-                        OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + INNER_STAND_FLOOR_ELEVATION
-                    ]);
+                        translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
+                            OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT +
+                            INNER_STAND_FLOOR_ELEVATION
+                        ]);
+                    }
+
+                    sphere(OUTER_SHELL_THICKNESS);
                 }
 
-                sphere(OUTER_SHELL_THICKNESS);
+                translate([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, 0 ]) rotate([ 90, -90, 0 ])
+                    round_bevel_complement(OUTER_SHELL_INNER_WIDTH, INNER_STAND_LIP_THICKNESS);
             }
 
             translate([ -LARGE_VALUE / 2, 0, 0 ]) cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
@@ -335,6 +355,7 @@ module lids()
 
         lats();
         debug_quarter_negative();
+        bottom_rounding_negative();
     }
 }
 
