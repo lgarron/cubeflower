@@ -186,12 +186,8 @@ module engraving_text(text_string, _epsilon, halign = "center")
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
-rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
+module inner_stand()
 {
-    if (DEBUG)
-    {
-#main_cube_on_stand();
-    }
 
     render() difference()
     {
@@ -240,6 +236,10 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
 
         debug_quarter_negative();
     }
+}
+
+module hinge()
+{
 
     difference()
     {
@@ -277,6 +277,10 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
         lats();
         debug_quarter_negative();
     }
+}
+
+module lids()
+{
 
     difference()
     {
@@ -324,4 +328,16 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
         lats();
         debug_quarter_negative();
     }
+}
+
+rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
+{
+    if (DEBUG)
+    {
+#main_cube_on_stand();
+    }
+
+    inner_stand();
+    hinge();
+    lids();
 }
