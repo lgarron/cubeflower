@@ -3,12 +3,12 @@ VERSION_TEXT = "v0.2.2";
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
 
-OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
+OPENING_ANGLE_EACH_SIDE = 0; // Avoid setting to 0 for printing unless you want overly shaved lids
 
 INCLUDE_INNER_STAND_ENGRAVING = false;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
-DEBUG = false;
+DEBUG = true;
 SET_ON_SIDE_FOR_PRINTING = !DEBUG;
 
 $fn = DEBUG ? 64 : 90;
@@ -20,6 +20,10 @@ include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.2.3
+
+- Move the inner stand clearance to the inside and increase to 0.25mm.
 
 ## v0.2.2
 
@@ -72,6 +76,8 @@ HINGE_THICKNESS = 5;
 
 DEFAULT_CLEARANCE = 0.1;
 MAIN_CLEARANCE_SCALE = 0.5;
+
+INNER_STAND_LIP_CLEARANCE = 0.25;
 
 LARGE_VALUE = 200;
 
@@ -200,7 +206,7 @@ module inner_stand()
                 {
                     main_cube();
                     translate([ 0, 0, INNER_STAND_LIP_THICKNESS ])
-                        sphere(INNER_STAND_LIP_THICKNESS - DEFAULT_CLEARANCE);
+                        sphere(INNER_STAND_LIP_THICKNESS - INNER_STAND_LIP_CLEARANCE);
                 }
 
                 main_cube_on_stand();
@@ -293,8 +299,7 @@ module lids()
                 {
                     lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH, INTERNAL_CUBE_EDGE_LENGTH);
                     lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
-                             INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2 + 2 * DEFAULT_CLEARANCE,
-                             INNER_STAND_LIP_HEIGHT);
+                             INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
 
                     translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
                         OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + INNER_STAND_FLOOR_ELEVATION
