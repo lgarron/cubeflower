@@ -3,6 +3,7 @@ VERSION_TEXT = "v0.2.4";
 OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 DEBUG = false;
 INCLUDE_INNER_STAND_ENGRAVING = false;
+PRINT_IN_PLACE = true;
 
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
@@ -24,6 +25,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v0.2.4
 
 - Add design variant engraving.
+- Allow the inner stand to be printed separately.
 
 ## v0.2.3
 
@@ -86,7 +88,7 @@ DEFAULT_CLEARANCE = 0.1;
 MAIN_CLEARANCE_SCALE = 0.5;
 SLIDING_CLEARANCE = 0.2;
 
-INNER_STAND_LIP_CLEARANCE = 0.25;
+INNER_STAND_CLEARANCE = 0.25;
 
 LARGE_VALUE = 200;
 
@@ -236,34 +238,59 @@ THUMB_DIVOT_DEPTH = 0.75;
 THUMB_DIVOT_X = CUBE_EDGE_LENGTH * 0.35;
 THUMB_DIVOT_Y = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH * 0.92;
 
+HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0.4;
+HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH = 5;
+
+module hinge_connector(horizontal_clearance = 0, vertical_clearance = 0)
+{
+    difference()
+    {
+        duplicate_and_mirror([ 0, 1, 0 ]) translate([
+            -HINGE_THICKNESS - horizontal_clearance, 10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE - horizontal_clearance,
+            -HINGE_THICKNESS / 2
+        ])
+            cube([
+                HINGE_THICKNESS * 2 + 2 * horizontal_clearance,
+                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + 2 * horizontal_clearance,
+                HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT +
+                vertical_clearance
+            ]);
+        duplicate_and_mirror([ 0, 1, 0 ]) translate([
+            -HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH / 2 + horizontal_clearance,
+            15 + -HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH / 2 + horizontal_clearance,
+            INNER_STAND_CLEARANCE
+        ])
+            cube([
+                HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH - horizontal_clearance * 2,
+                HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH - horizontal_clearance * 2,
+                HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT + vertical_clearance +
+                _EPSILON
+            ]);
+    }
+}
+
 module inner_stand()
 {
 
     render() difference()
     {
-        render() union()
+        render() difference()
         {
-            // TODO: `INNER_STAND_LIP_THICKNESS` is wrong here?
-            difference()
+            minkowski()
             {
-                minkowski()
-                {
-                    main_cube();
-                    translate([ 0, 0, INNER_STAND_LIP_THICKNESS ])
-                        sphere(INNER_STAND_LIP_THICKNESS - INNER_STAND_LIP_CLEARANCE);
-                }
-
-                main_cube_on_stand();
-                translate([ 0, 0, LARGE_VALUE / 2 + INNER_STAND_FLOOR_ELEVATION + INNER_STAND_LIP_HEIGHT ])
-                    cube(LARGE_VALUE, center = true);
+                main_cube();
+                translate([ 0, 0, INNER_STAND_LIP_THICKNESS ])
+                    sphere(INNER_STAND_LIP_THICKNESS - INNER_STAND_CLEARANCE);
             }
 
-            duplicate_and_mirror([ 0, 1, 0 ])
-                translate([ -HINGE_THICKNESS, 10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE, -HINGE_THICKNESS / 2 ])
-                    cube([
-                        HINGE_THICKNESS * 2, 10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE, HINGE_THICKNESS / 2 +
-                        INNER_STAND_FLOOR_ELEVATION
-                    ]);
+            main_cube_on_stand();
+            translate([ 0, 0, LARGE_VALUE / 2 + INNER_STAND_FLOOR_ELEVATION + INNER_STAND_LIP_HEIGHT ])
+                cube(LARGE_VALUE, center = true);
+
+            if (!PRINT_IN_PLACE)
+            {
+                hinge_connector(horizontal_clearance = 0.05, vertical_clearance = 0.05);
+            }
         }
 
         duplicate_and_mirror() duplicate_and_mirror([ 0, 1, 0 ])
@@ -395,27 +422,43 @@ module lids()
     }
 }
 
+if (!PRINT_IN_PLACE)
+{
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
+    {
+        inner_stand();
+    }
+}
+
 rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
 {
     if (DEBUG)
     {
-#main_cube_on_stand();
+        % main_cube_on_stand();
     }
+    if (PRINT_IN_PLACE)
+    {
 
-    inner_stand();
+        inner_stand();
+    }
+    hinge_connector();
     hinge();
     lids();
 }
 
-rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) color("red") union()
+if (!DEBUG)
 {
-    // Gears
-    translate([ 0, 0, -HINGE_THICKNESS / 2 ])
-        cube([ HINGE_THICKNESS * 2, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2, HINGE_THICKNESS ], center = true);
-    // Engraving
-    translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION / 2 ]) cube(
-        [ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION + _EPSILON ], center = true);
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) color("red") union()
+    {
+        // Gears
+        translate([ 0, 0, -HINGE_THICKNESS / 2 ])
+            cube([ HINGE_THICKNESS * 2, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2, HINGE_THICKNESS ], center = true);
+        // Engraving
+        translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION / 2 ])
+            cube([ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION + _EPSILON ],
+                 center = true);
 
-    translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
-        text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+        translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+            text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+    }
 }
