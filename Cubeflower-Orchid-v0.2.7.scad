@@ -13,7 +13,6 @@ PRINT_IN_PLACE = false;
 INCLUDE_SOLID_INFILL_SHAPE = true;
 INCLUDE_SUPPORT_BLOCKER_SHAPE = PRINT_IN_PLACE;
 
-MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
 
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
@@ -96,7 +95,6 @@ include <./node_modules/scad/small_hinge.scad>
 
 */
 
-INTERNAL_MAIN_SCALE = MAIN_SCALE;
 INTERNAL_CUBE_EDGE_LENGTH = CUBE_EDGE_LENGTH; // YS3M
 
 HINGE_THICKNESS = 5;
@@ -339,7 +337,7 @@ module inner_stand()
             render() union()
             {
                 render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH * 2 ])
-                    linear_extrude(ENGRAVING_LEVEL_DEPTH * 2 + _EPSILON) scale(MAIN_SCALE / INTERNAL_MAIN_SCALE)
+                    linear_extrude(ENGRAVING_LEVEL_DEPTH * 2 + _EPSILON)
                         import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
             }
         }
@@ -495,13 +493,13 @@ module lids()
 
 if (!PRINT_IN_PLACE)
 {
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
     {
         translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
     }
 }
 
-rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
+rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
 {
     if (DEBUG)
     {
@@ -521,7 +519,7 @@ GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
 
 if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
 {
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) color("blue") union()
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("blue") union()
     {
         hinge_core();
         translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
@@ -531,7 +529,7 @@ if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
 
 if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
 {
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) color("red") union()
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("red") union()
     {
         // Gears
         translate([ 0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA ]) cube(
