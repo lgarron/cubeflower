@@ -1,6 +1,6 @@
 {
 	"name": "@lgarron-3d/cube-box",
-	"version": "0.2.6-dev",
+	"version": "0.2.6",
 	"dependencies": {
 		"scad": "v0.3.1"
 	}

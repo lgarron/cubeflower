@@ -32,7 +32,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 ## v0.2.6
 
-- Allow lid rotation to overextend so they can lay flat.
+- Allow lids to overextend their rotation so they can lay flat.
 
 ## v0.2.5
 
