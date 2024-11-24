@@ -191,13 +191,12 @@ module debug_quarter_negative()
 {
     if (DEBUG)
     {
-
-        translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true);      // TODO
-        translate([ 0, -LARGE_VALUE / 2 + 10, 0 ]) cube(LARGE_VALUE, center = true); // TODO
+        translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true); // TODO
+        translate([ 0, -LARGE_VALUE / 2, 0 ]) cube(LARGE_VALUE, center = true); // TODO
     }
 }
 
-module lid_part(w, d, h)
+module lid_part(w, d, h, pre_angle_to_lie_flat_on_table = false)
 {
 
     lid_radius_w = w - HINGE_THICKNESS / 2;
@@ -206,10 +205,13 @@ module lid_part(w, d, h)
 
     difference()
     {
-        translate([ HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) rotate([ 90, 0, 0 ])
-            cylinder(h = d, r = lid_radius, center = true, $fn = LID_TOP_FN);
-
-        translate([ LARGE_VALUE / 2 + w, 0, 0 ]) cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
+        rotate_for_lid_right(angle = pre_angle_to_lie_flat_on_table ? -LID_OVEROPENED_FLAT_ANGLE : 0) difference()
+        {
+            rotate_for_lid_right(angle = pre_angle_to_lie_flat_on_table ? LID_OVEROPENED_FLAT_ANGLE : 0)
+                translate([ HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) rotate([ 90, 0, 0 ])
+                    cylinder(h = d, r = lid_radius, center = true, $fn = LID_TOP_FN);
+            translate([ LARGE_VALUE / 2 + w, 0, 0 ]) cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
+        }
         translate([ -LARGE_VALUE / 2 + HINGE_THICKNESS / 2, 0, 0 ])
             cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
         translate([ 0, 0, -LARGE_VALUE / 2 + INNER_STAND_FLOOR_ELEVATION ])
@@ -441,9 +443,12 @@ module lids()
                 {
                     union()
                     {
-                        lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH, INTERNAL_CUBE_EDGE_LENGTH);
-                        lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2 + INNER_STAND_LIP_THICKNESS,
-                                 INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2, INNER_STAND_LIP_HEIGHT);
+                        // lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH,
+                        // INTERNAL_CUBE_EDGE_LENGTH);
+                        lid_part(OUTER_SHELL_INNER_WIDTH / 2, INTERNAL_CUBE_EDGE_LENGTH, INTERNAL_CUBE_EDGE_LENGTH,
+                                 pre_angle_to_lie_flat_on_table = true);
+                        lid_part(OUTER_SHELL_INNER_WIDTH / 2, INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2,
+                                 INNER_STAND_LIP_HEIGHT);
 
                         translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
                             OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT +
