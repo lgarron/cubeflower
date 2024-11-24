@@ -95,8 +95,6 @@ include <./node_modules/scad/small_hinge.scad>
 
 */
 
-INTERNAL_CUBE_EDGE_LENGTH = CUBE_EDGE_LENGTH; // YS3M
-
 HINGE_THICKNESS = 5;
 
 DEFAULT_CLEARANCE = 0.1;
@@ -120,7 +118,7 @@ OUTER_SHELL_THICKNESS = 1.5;
 
 module main_cube()
 {
-    translate([ 0, 0, INTERNAL_CUBE_EDGE_LENGTH / 2 ]) cube(INTERNAL_CUBE_EDGE_LENGTH, center = true);
+    translate([ 0, 0, CUBE_EDGE_LENGTH / 2 ]) cube(CUBE_EDGE_LENGTH, center = true);
 };
 module main_cube_on_stand()
 {
@@ -129,7 +127,7 @@ module main_cube_on_stand()
 
 HINGE_GEAR_OUTER_RADIUS = 6.4 / 5 * HINGE_THICKNESS / 2;
 
-OUTER_SHELL_INNER_WIDTH = INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
+OUTER_SHELL_INNER_WIDTH = CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
 OUTER_SHELL_OUTER_WIDTH = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS;
 
 BASE_EXTRA_HEIGHT_FOR_GEARS = __SMALL_HINGE__MAX_RADIAL_DIVERGENCE_FACTOR * HINGE_THICKNESS / 4;
@@ -441,11 +439,11 @@ module lids()
                 {
                     union()
                     {
-                        // lid_part(INTERNAL_CUBE_EDGE_LENGTH / 2, INTERNAL_CUBE_EDGE_LENGTH,
-                        // INTERNAL_CUBE_EDGE_LENGTH);
-                        lid_part(OUTER_SHELL_INNER_WIDTH / 2, INTERNAL_CUBE_EDGE_LENGTH, INTERNAL_CUBE_EDGE_LENGTH,
+                        // lid_part(CUBE_EDGE_LENGTH / 2, CUBE_EDGE_LENGTH,
+                        // CUBE_EDGE_LENGTH);
+                        lid_part(OUTER_SHELL_INNER_WIDTH / 2, CUBE_EDGE_LENGTH, CUBE_EDGE_LENGTH,
                                  pre_angle_to_lie_flat_on_table = true);
-                        lid_part(OUTER_SHELL_INNER_WIDTH / 2, INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2,
+                        lid_part(OUTER_SHELL_INNER_WIDTH / 2, CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2,
                                  INNER_STAND_LIP_HEIGHT);
 
                         translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
