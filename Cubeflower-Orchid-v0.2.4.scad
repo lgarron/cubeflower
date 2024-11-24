@@ -1,6 +1,6 @@
 DESIGN_VARIANT_TEXT = "ORCHID";
 VERSION_TEXT = "v0.2.4";
-OPENING_ANGLE_EACH_SIDE = 0; // Avoid setting to 0 for printing unless you want overly shaved lids
+OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 DEBUG = false;
 INCLUDE_INNER_STAND_ENGRAVING = false;
 
@@ -113,7 +113,7 @@ module main_cube_on_stand()
 HINGE_GEAR_OUTER_RADIUS = 6.4 / 5 * HINGE_THICKNESS / 2;
 
 OUTER_SHELL_INNER_WIDTH = INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
-OUTER_SHELL_OUTER_WIDTH = OUTER_SHELL_INNER_WIDTH + OUTER_SHELL_THICKNESS;
+OUTER_SHELL_OUTER_WIDTH = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS;
 
 BASE_EXTRA_HEIGHT_FOR_GEARS =
     1.4 / 5 * HINGE_THICKNESS / 2; // This is slightly less than the gears stick out, but the impact is negligible.
@@ -405,4 +405,17 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
     inner_stand();
     hinge();
     lids();
+}
+
+rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) color("red") union()
+{
+    // Gears
+    translate([ 0, 0, -HINGE_THICKNESS / 2 ])
+        cube([ HINGE_THICKNESS * 2, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2, HINGE_THICKNESS ], center = true);
+    // Engraving
+    translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION / 2 ]) cube(
+        [ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION + _EPSILON ], center = true);
+
+    translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+        text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
 }
