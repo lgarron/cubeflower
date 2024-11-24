@@ -267,7 +267,7 @@ module hinge_connector(horizontal_clearance = 0, vertical_clearance = 0)
             -HINGE_THICKNESS / 2
         ])
             cube([
-                HINGE_THICKNESS * 2 + 2 * horizontal_clearance,
+                HINGE_THICKNESS * 2 - __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE + 2 * horizontal_clearance,
                 10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + 2 * horizontal_clearance,
                 HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT +
                 vertical_clearance
@@ -351,11 +351,7 @@ module duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_differen
 module hinge_core()
 {
 
-    rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) small_hinge_30mm(
-        main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
-        plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
-
-    rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, -30 ]) small_hinge_30mm(
+    rotate([ 90, 0, 0 ]) duplicate_and_translate([ 0, 0, -30 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) small_hinge_30mm(
         main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
         plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
 }
