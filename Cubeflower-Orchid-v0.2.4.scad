@@ -351,20 +351,19 @@ module hinge()
         {
             duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference()
             {
-                translate([ BASE_LATTICE_OFFSET, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ])
-                    cube([ OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_OFFSET, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
+                union()
+                {
+                    translate([ BASE_LATTICE_OFFSET, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ]) cube(
+                        [ OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_OFFSET, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
 
-                duplicate_and_mirror([ 0, 1, 0 ]) translate([ HINGE_THICKNESS, 5 + 15, -BASE_HEIGHT ]) cube([
-                    OUTER_SHELL_INNER_WIDTH / 2 - HINGE_THICKNESS, OUTER_SHELL_INNER_WIDTH / 2 - 5 - 15,
-                    BASE_HEIGHT
-                ]);
-                duplicate_and_mirror([ 0, 1, 0 ]) translate([ HINGE_THICKNESS, 0, -BASE_HEIGHT ])
-                    cube([ OUTER_SHELL_INNER_WIDTH / 2 - HINGE_THICKNESS, 10, BASE_HEIGHT ]);
-                // duplicate_and_mirror([ 0, 1, 0 ]) translate([ HINGE_THICKNESS, 5 - 15, -BASE_HEIGHT ])
-                // cube([
-                //     OUTER_SHELL_INNER_WIDTH / 2 - HINGE_THICKNESS, OUTER_SHELL_INNER_WIDTH / 2 - 5,
-                //     BASE_HEIGHT
-                // ]);
+                    duplicate_and_mirror([ 0, 1, 0 ]) translate([ HINGE_THICKNESS - _EPSILON, 5 + 15, -BASE_HEIGHT ])
+                        cube([
+                            BASE_LATTICE_OFFSET - HINGE_THICKNESS + _EPSILON, OUTER_SHELL_INNER_WIDTH / 2 - 5 - 15,
+                            BASE_HEIGHT
+                        ]);
+                    duplicate_and_mirror([ 0, 1, 0 ]) translate([ HINGE_THICKNESS, 0, -BASE_HEIGHT ])
+                        cube([ BASE_LATTICE_OFFSET - HINGE_THICKNESS + _EPSILON, 10, BASE_HEIGHT ]);
+                }
             }
 
             rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) small_hinge_30mm(
@@ -381,7 +380,6 @@ module hinge()
             resize([ 10 - 2, 0, VERSTION_TEXT_ENGRAVING_DEPTH ], auto = true) engraving_text(DESIGN_VARIANT_TEXT, 0);
 
         debug_quarter_negative();
-        bottom_rounding_negative();
     }
 }
 
