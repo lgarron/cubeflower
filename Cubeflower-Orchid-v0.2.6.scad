@@ -1,12 +1,17 @@
+LID_OVEROPENED_FLAT_ANGLE = 1.45;
+
+/********/
+
 DESIGN_VARIANT_TEXT = "ORCHID";
 VERSION_TEXT = "v0.2.5";
-OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
+// Avoid setting to 0 for printing unless you want overly shaved lids
+OPENING_ANGLE_EACH_SIDE = 90 + LID_OVEROPENED_FLAT_ANGLE;
 DEBUG = false;
 INCLUDE_INNER_STAND_ENGRAVING = false;
-PRINT_IN_PLACE = true;
+PRINT_IN_PLACE = false;
 
 INCLUDE_SOLID_INFILL_SHAPE = true;
-INCLUDE_SUPPORT_BLOCKER_SHAPE = true;
+INCLUDE_SUPPORT_BLOCKER_SHAPE = PRINT_IN_PLACE;
 
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
@@ -24,6 +29,10 @@ include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.2.6
+
+- Allow lid rotation to overextend so they can lay flat.
 
 ## v0.2.5
 
@@ -125,38 +134,36 @@ HINGE_GEAR_OUTER_RADIUS = 6.4 / 5 * HINGE_THICKNESS / 2;
 OUTER_SHELL_INNER_WIDTH = INTERNAL_CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
 OUTER_SHELL_OUTER_WIDTH = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS;
 
-BASE_EXTRA_HEIGHT_FOR_GEARS =
-    1.4 / 5 * HINGE_THICKNESS / 2; // This is slightly less than the gears stick out, but the impact is negligible.
+BASE_EXTRA_HEIGHT_FOR_GEARS = __SMALL_HINGE__MAX_RADIAL_DIVERGENCE_FACTOR * HINGE_THICKNESS / 4;
 BASE_HEIGHT = HINGE_THICKNESS + BASE_EXTRA_HEIGHT_FOR_GEARS;
 
-BASE_LATTICE_OFFSET = HINGE_THICKNESS + DEFAULT_CLEARANCE * 2;
-BASE_LATTICE_COMPLEMENT_OFFSET = HINGE_THICKNESS - DEFAULT_CLEARANCE;
-
-module rotate_opening_angle()
-{
-    translate([ HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) rotate([ 0, OPENING_ANGLE_EACH_SIDE, 0 ])
-        translate([ -HINGE_THICKNESS / 2, 0, HINGE_THICKNESS / 2 ]) children();
-}
-
-module rotate_opening_angle_left()
-{
-    translate([ -HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) rotate([ 0, -OPENING_ANGLE_EACH_SIDE, 0 ])
-        translate([ HINGE_THICKNESS / 2, 0, HINGE_THICKNESS / 2 ]) children();
-}
+BASE_LATTICE_OFFSET = HINGE_THICKNESS + DEFAULT_CLEARANCE;
+BASE_LATTICE_COMPLEMENT_OFFSET = HINGE_THICKNESS;
 
 module lat(i, mirror_scale)
 {
     scale([ mirror_scale, 1, 1 ]) translate([
-        BASE_LATTICE_COMPLEMENT_OFFSET - _EPSILON,
-        i * LAT_WIDTH * 2 + LAT_WIDTH / 2 + mirror_scale * LAT_WIDTH / 2 - SLIDING_CLEARANCE, -BASE_HEIGHT -
-        _EPSILON
+        -LARGE_VALUE / 2, i * LAT_WIDTH * 2 + LAT_WIDTH / 2 + mirror_scale * LAT_WIDTH / 2 - SLIDING_CLEARANCE,
+        -BASE_HEIGHT - _EPSILON -
+        LARGE_VALUE
     ])
         cube([
-            OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS + _EPSILON - BASE_LATTICE_COMPLEMENT_OFFSET +
-                2 * _EPSILON,
-            LAT_WIDTH + SLIDING_CLEARANCE * 2, BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON +
-            DEFAULT_CLEARANCE
+            LARGE_VALUE, LAT_WIDTH + SLIDING_CLEARANCE * 2,
+            BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON + DEFAULT_CLEARANCE +
+            LARGE_VALUE
         ]);
+}
+
+module rotate_for_lid_right(angle)
+{
+    translate([ HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) rotate([ 0, angle, 0 ])
+        translate([ -HINGE_THICKNESS / 2, 0, HINGE_THICKNESS / 2 ]) children();
+}
+
+module rotate_for_lid_left(angle)
+{
+    translate([ -HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) rotate([ 0, -angle, 0 ])
+        translate([ HINGE_THICKNESS / 2, 0, HINGE_THICKNESS / 2 ]) children();
 }
 
 module right_lats()
@@ -185,8 +192,8 @@ module debug_quarter_negative()
     if (DEBUG)
     {
 
-        translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true); // TODO
-        translate([ 0, -LARGE_VALUE / 2, 0 ]) cube(LARGE_VALUE, center = true); // TODO
+        translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true);      // TODO
+        translate([ 0, -LARGE_VALUE / 2 + 10, 0 ]) cube(LARGE_VALUE, center = true); // TODO
     }
 }
 
@@ -221,7 +228,8 @@ module engraving_text(text_string, _epsilon, halign = "center")
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
-BOTTOM_ROUNDING_RADIUS = 10;
+BOTTOM_ROUNDING_RADIUS_X = 5;
+BOTTOM_ROUNDING_RADIUS_Z = 12;
 
 module bottom_rounding_negative()
 {
@@ -229,13 +237,13 @@ module bottom_rounding_negative()
     render() difference()
     {
         translate([
-            OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS - BOTTOM_ROUNDING_RADIUS,
+            OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS - BOTTOM_ROUNDING_RADIUS_X,
             -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON) / 2, -BASE_HEIGHT -
             _EPSILON
         ])
             cube([
-                BOTTOM_ROUNDING_RADIUS + _EPSILON, OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
-                BOTTOM_ROUNDING_RADIUS +
+                BOTTOM_ROUNDING_RADIUS_X + _EPSILON, OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
+                BOTTOM_ROUNDING_RADIUS_Z +
                 _EPSILON
             ]);
 
@@ -243,11 +251,17 @@ module bottom_rounding_negative()
         {
             translate(
                 [ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT + OUTER_SHELL_THICKNESS ])
-                rotate([ 90, -90, 0 ])
-                    round_bevel_cylinder(OUTER_SHELL_INNER_WIDTH, BOTTOM_ROUNDING_RADIUS - OUTER_SHELL_THICKNESS);
+                scale([
+                    1, 1,
+                    (BOTTOM_ROUNDING_RADIUS_Z - OUTER_SHELL_THICKNESS) /
+                        (BOTTOM_ROUNDING_RADIUS_X - OUTER_SHELL_THICKNESS)
+                ]) rotate([ 90, -90, 0 ])
+                    round_bevel_cylinder(OUTER_SHELL_INNER_WIDTH, BOTTOM_ROUNDING_RADIUS_X - OUTER_SHELL_THICKNESS);
             sphere(OUTER_SHELL_THICKNESS);
         }
     }
+
+    translate([ 0, 0, -LARGE_VALUE / 2 - BASE_HEIGHT ]) cube(LARGE_VALUE, center = true);
 }
 
 THUMB_DIVOT_RADIUS = 20;
@@ -332,28 +346,46 @@ module inner_stand()
     }
 }
 
+module pre_lats_right()
+{
+    rotate_for_lid_right(LID_OVEROPENED_FLAT_ANGLE) difference()
+    {
+        rotate_for_lid_right(LID_OVEROPENED_FLAT_ANGLE) difference()
+        {
+            children();
+            bottom_rounding_negative();
+            translate([
+                -LARGE_VALUE / 2 + BASE_LATTICE_OFFSET, 0, -LARGE_VALUE / 2 - BASE_HEIGHT +
+                BASE_EXTRA_HEIGHT_FOR_GEARS
+            ]) cube(LARGE_VALUE, center = true);
+        }
+
+        translate([ LARGE_VALUE / 2 + OUTER_SHELL_OUTER_WIDTH / 2, 0, 0 ]) cube(LARGE_VALUE, center = true);
+    }
+}
+
 module duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference()
 {
-    rotate_opening_angle() difference()
+    rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE - 2 * LID_OVEROPENED_FLAT_ANGLE) difference()
     {
-        children();
+        pre_lats_right() children();
         right_lats();
-        bottom_rounding_negative();
     }
-    rotate_opening_angle_left() difference()
+
+    rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE - 2 * LID_OVEROPENED_FLAT_ANGLE) difference()
     {
-        mirror([ 1, 0, 0 ]) children();
+        mirror([ 1, 0, 0 ]) pre_lats_right() children();
         left_lats();
-        mirror([ 1, 0, 0 ]) bottom_rounding_negative();
     }
 }
 
 module hinge_core()
 {
 
-    rotate([ 90, 0, 0 ]) duplicate_and_translate([ 0, 0, -30 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) small_hinge_30mm(
-        main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
-        plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
+    rotate([ 90, 0, 0 ]) duplicate_and_translate([ 0, 0, -30 ]) translate([ 0, -HINGE_THICKNESS, 0 ])
+        small_hinge_30mm(main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
+                         main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true,
+                         common_gear_offset = 0, extra_degrees = LID_OVEROPENED_FLAT_ANGLE);
 }
 
 module hinge()
@@ -460,7 +492,7 @@ if (!PRINT_IN_PLACE)
 {
     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) union()
     {
-        inner_stand();
+        translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
     }
 }
 
