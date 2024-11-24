@@ -29,6 +29,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.7
+
+- Fix calculations about the height taken up by gears.
+
 ## v0.2.6
 
 - Allow lids to overextend their rotation so they can lay flat.
@@ -125,13 +129,13 @@ module main_cube_on_stand()
     translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION ]) main_cube();
 };
 
-HINGE_GEAR_OUTER_RADIUS = 6.4 / 5 * HINGE_THICKNESS / 2;
-
 OUTER_SHELL_INNER_WIDTH = CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2;
 OUTER_SHELL_OUTER_WIDTH = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS;
 
-BASE_EXTRA_HEIGHT_FOR_GEARS = __SMALL_HINGE__MAX_RADIAL_DIVERGENCE_FACTOR * HINGE_THICKNESS / 4;
-BASE_HEIGHT = HINGE_THICKNESS + BASE_EXTRA_HEIGHT_FOR_GEARS;
+GEAR_MAX_RADIAL_DIVERGENCE = HINGE_THICKNESS / 2 * __SMALL_HINGE__MAX_RADIAL_DIVERGENCE_FACTOR;
+BASE_HEIGHT = HINGE_THICKNESS + GEAR_MAX_RADIAL_DIVERGENCE;
+
+HINGE_GEAR_OUTER_RADIUS = HINGE_THICKNESS / 2 + GEAR_MAX_RADIAL_DIVERGENCE;
 
 BASE_LATTICE_OFFSET = HINGE_THICKNESS + DEFAULT_CLEARANCE;
 BASE_LATTICE_COMPLEMENT_OFFSET = HINGE_THICKNESS;
@@ -145,7 +149,7 @@ module lat(i, mirror_scale)
     ])
         cube([
             LARGE_VALUE, LAT_WIDTH + SLIDING_CLEARANCE * 2,
-            BASE_EXTRA_HEIGHT_FOR_GEARS * 2 + _EPSILON + DEFAULT_CLEARANCE +
+            GEAR_MAX_RADIAL_DIVERGENCE * 2 + _EPSILON + DEFAULT_CLEARANCE +
             LARGE_VALUE
         ]);
 }
@@ -354,7 +358,7 @@ module pre_lats_right()
             bottom_rounding_negative();
             translate([
                 -LARGE_VALUE / 2 + BASE_LATTICE_OFFSET, 0, -LARGE_VALUE / 2 - BASE_HEIGHT +
-                BASE_EXTRA_HEIGHT_FOR_GEARS
+                GEAR_MAX_RADIAL_DIVERGENCE
             ]) cube(LARGE_VALUE, center = true);
         }
 
@@ -464,7 +468,7 @@ module lids()
             translate([
                 -BASE_LATTICE_OFFSET, -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS) / 2, -BASE_HEIGHT -
                 _EPSILON
-            ]) cube([ BASE_LATTICE_OFFSET * 2, OUTER_SHELL_OUTER_WIDTH, BASE_EXTRA_HEIGHT_FOR_GEARS + _EPSILON ]);
+            ]) cube([ BASE_LATTICE_OFFSET * 2, OUTER_SHELL_OUTER_WIDTH, GEAR_MAX_RADIAL_DIVERGENCE + _EPSILON ]);
             translate([ -BASE_LATTICE_OFFSET, -(OUTER_SHELL_INNER_WIDTH) / 2, -BASE_HEIGHT - _EPSILON ])
                 cube([ BASE_LATTICE_OFFSET * 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + _EPSILON ]);
 
