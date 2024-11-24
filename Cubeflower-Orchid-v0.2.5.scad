@@ -1,10 +1,12 @@
 DESIGN_VARIANT_TEXT = "ORCHID";
-VERSION_TEXT = "v0.2.4";
+VERSION_TEXT = "v0.2.5";
 OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
 DEBUG = false;
 INCLUDE_INNER_STAND_ENGRAVING = false;
 PRINT_IN_PLACE = true;
-INCLUDE_SUPPORT_BLOCKER = true;
+
+INCLUDE_SOLID_INFILL_SHAPE = true;
+INCLUDE_SUPPORT_BLOCKER_SHAPE = true;
 
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
@@ -22,6 +24,10 @@ include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.2.5
+
+- Include solid infill shape.
 
 ## v0.2.4
 
@@ -342,6 +348,18 @@ module duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_differen
     }
 }
 
+module hinge_core()
+{
+
+    rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) small_hinge_30mm(
+        main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
+        plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
+
+    rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, -30 ]) small_hinge_30mm(
+        main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE, main_clearance_scale = 0.5,
+        plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
+}
+
 module hinge()
 {
 
@@ -366,13 +384,7 @@ module hinge()
                 }
             }
 
-            rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) small_hinge_30mm(
-                main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
-                main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
-
-            rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, -30 ]) small_hinge_30mm(
-                main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
-                main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
+            hinge_core();
         };
         translate([ 0, -15, -HINGE_THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
             resize([ 10 - 2, 0, VERSTION_TEXT_ENGRAVING_DEPTH ], auto = true) engraving_text(VERSION_TEXT, 0);
@@ -474,7 +486,17 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
 
 GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
 
-if (INCLUDE_SUPPORT_BLOCKER && !DEBUG)
+if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
+{
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) color("blue") union()
+    {
+        hinge_core();
+        translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+            text("SOLID INFILL", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+    }
+}
+
+if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
 {
     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) color("red") union()
     {
