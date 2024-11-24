@@ -1,5 +1,6 @@
-VERSION_TEXT = "v0.2.3";
-OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want overly shaved lids
+DESIGN_VARIANT_TEXT = "ORCHID";
+VERSION_TEXT = "v0.2.4";
+OPENING_ANGLE_EACH_SIDE = 0; // Avoid setting to 0 for printing unless you want overly shaved lids
 DEBUG = false;
 INCLUDE_INNER_STAND_ENGRAVING = false;
 
@@ -19,6 +20,10 @@ include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.2.4
+
+- Add design variant engraving.
 
 ## v0.2.3
 
@@ -316,8 +321,10 @@ module hinge()
                 main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
                 main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true, common_gear_offset = 0);
         };
+        translate([ 0, -15, -HINGE_THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
+            resize([ 10 - 2, 0, VERSTION_TEXT_ENGRAVING_DEPTH ], auto = true) engraving_text(VERSION_TEXT, 0);
         translate([ 0, 15, -HINGE_THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
-            engraving_text(VERSION_TEXT, 0);
+            resize([ 10 - 2, 0, VERSTION_TEXT_ENGRAVING_DEPTH ], auto = true) engraving_text(DESIGN_VARIANT_TEXT, 0);
 
         lats();
         debug_quarter_negative();
