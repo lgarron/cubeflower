@@ -4,6 +4,7 @@ OPENING_ANGLE_EACH_SIDE = 75; // Avoid setting to 0 for printing unless you want
 DEBUG = false;
 INCLUDE_INNER_STAND_ENGRAVING = false;
 PRINT_IN_PLACE = true;
+INCLUDE_SUPPORT_BLOCKER = true;
 
 MAIN_SCALE = 1;
 CUBE_EDGE_LENGTH = 57; // mm
@@ -26,6 +27,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 - Add design variant engraving.
 - Allow the inner stand to be printed separately.
+- Adjust `difference(…)` calculations to work at 90 degrees.
 
 ## v0.2.3
 
@@ -151,14 +153,23 @@ module lat(i, mirror_scale)
         ]);
 }
 
-module lats()
+module right_lats()
 {
     render() union()
     {
         for (i = [-5:5])
         {
-            rotate_opening_angle() lat(i, 1);
-            rotate_opening_angle_left() lat(i, -1);
+            lat(i, 1);
+        }
+    }
+}
+module left_lats()
+{
+    render() union()
+    {
+        for (i = [-5:5])
+        {
+            lat(i, -1);
         }
     }
 }
@@ -209,7 +220,7 @@ BOTTOM_ROUNDING_RADIUS = 10;
 module bottom_rounding_negative()
 {
     // TODO: make this work
-    render() duplicate_and_mirror() rotate_opening_angle() difference()
+    render() difference()
     {
         translate([
             OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS - BOTTOM_ROUNDING_RADIUS,
@@ -315,6 +326,22 @@ module inner_stand()
     }
 }
 
+module duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference()
+{
+    rotate_opening_angle() difference()
+    {
+        children();
+        right_lats();
+        bottom_rounding_negative();
+    }
+    rotate_opening_angle_left() difference()
+    {
+        mirror([ 1, 0, 0 ]) children();
+        left_lats();
+        mirror([ 1, 0, 0 ]) bottom_rounding_negative();
+    }
+}
+
 module hinge()
 {
 
@@ -322,7 +349,7 @@ module hinge()
     {
         render() union()
         {
-            duplicate_and_mirror() rotate_opening_angle() union()
+            duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference()
             {
                 translate([ BASE_LATTICE_OFFSET, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ])
                     cube([ OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_OFFSET, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
@@ -353,11 +380,14 @@ module hinge()
         translate([ 0, 15, -HINGE_THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
             resize([ 10 - 2, 0, VERSTION_TEXT_ENGRAVING_DEPTH ], auto = true) engraving_text(DESIGN_VARIANT_TEXT, 0);
 
-        lats();
         debug_quarter_negative();
         bottom_rounding_negative();
     }
 }
+
+// TODO: this value is exact, but there's probably a neater way to make this calculation come from arithmetic with
+// places.
+DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES = 3;
 
 module lids()
 {
@@ -365,7 +395,7 @@ module lids()
     difference()
     {
 
-        render() duplicate_and_mirror() rotate_opening_angle() difference()
+        render() duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference() difference()
         {
             union()
             {
@@ -395,12 +425,7 @@ module lids()
             translate([
                 -BASE_LATTICE_OFFSET, -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS) / 2, -BASE_HEIGHT -
                 _EPSILON
-            ])
-                cube([
-                    BASE_LATTICE_OFFSET * 2, OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS,
-                    BASE_EXTRA_HEIGHT_FOR_GEARS +
-                    _EPSILON
-                ]);
+            ]) cube([ BASE_LATTICE_OFFSET * 2, OUTER_SHELL_OUTER_WIDTH, BASE_EXTRA_HEIGHT_FOR_GEARS + _EPSILON ]);
             translate([ -BASE_LATTICE_OFFSET, -(OUTER_SHELL_INNER_WIDTH) / 2, -BASE_HEIGHT - _EPSILON ])
                 cube([ BASE_LATTICE_OFFSET * 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + _EPSILON ]);
 
@@ -414,11 +439,14 @@ module lids()
             ]) sphere(THUMB_DIVOT_RADIUS);
         }
 
-        cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
+        translate([
+            0, 0,
+            LARGE_VALUE / 2 - BASE_LATTICE_COMPLEMENT_OFFSET -
+                DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES *
+            DEFAULT_CLEARANCE
+        ]) cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
 
-        lats();
         debug_quarter_negative();
-        bottom_rounding_negative();
     }
 }
 
@@ -446,13 +474,20 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) 
     lids();
 }
 
-if (!DEBUG)
+GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
+
+if (INCLUDE_SUPPORT_BLOCKER && !DEBUG)
 {
     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) scale(INTERNAL_MAIN_SCALE) color("red") union()
     {
         // Gears
-        translate([ 0, 0, -HINGE_THICKNESS / 2 ])
-            cube([ HINGE_THICKNESS * 2, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2, HINGE_THICKNESS ], center = true);
+        translate([ 0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA ]) cube(
+            [
+                HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
+                HINGE_THICKNESS + 2 *
+                GEAR_SUPPORT_BLOCKER_EXTRA
+            ],
+            center = true);
         // Engraving
         translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION / 2 ])
             cube([ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION + _EPSILON ],
