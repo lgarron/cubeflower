@@ -5,7 +5,7 @@ LID_OVEROPENED_FLAT_ANGLE = 1.45;
 DESIGN_VARIANT_TEXT = "ORCHID";
 VERSION_TEXT = "v0.2.8";
 // Avoid setting to 0 for printing unless you want overly shaved lids
-OPENING_ANGLE_EACH_SIDE = 75;
+OPENING_ANGLE_EACH_SIDE = 90; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
 DEBUG = false;
 INCLUDE_INNER_STAND_ENGRAVING = false;
 PRINT_IN_PLACE = true;
@@ -17,7 +17,7 @@ CUBE_EDGE_LENGTH = 57; // mm
 
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
-SET_ON_SIDE_FOR_PRINTING = !DEBUG && PRINT_IN_PLACE;
+SET_ON_SIDE_FOR_PRINTING = false; // !DEBUG && PRINT_IN_PLACE;
 
 $fn = DEBUG ? 64 : 90;
 LID_TOP_FN = DEBUG ? 64 : 360;
