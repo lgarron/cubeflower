@@ -3,7 +3,7 @@ LID_OVEROPENED_FLAT_ANGLE = 1.45;
 /********/
 
 DESIGN_VARIANT_TEXT = "ORCHID";
-VERSION_TEXT = "v0.2.7";
+VERSION_TEXT = "v0.2.8";
 // Avoid setting to 0 for printing unless you want overly shaved lids
 OPENING_ANGLE_EACH_SIDE = 75;
 DEBUG = false;
@@ -28,6 +28,10 @@ include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
 
 /*
+
+## v0.2.8
+
+- Fix hinge tangent shaving for in-place printing.
 
 ## v0.2.7
 
@@ -387,7 +391,7 @@ module hinge_core()
     rotate([ 90, 0, 0 ]) duplicate_and_translate([ 0, 0, -30 ]) translate([ 0, -HINGE_THICKNESS, 0 ])
         small_hinge_30mm(main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
                          main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true,
-                         common_gear_offset = 0, extra_degrees = LID_OVEROPENED_FLAT_ANGLE);
+                         common_gear_offset = 0, extra_degrees = LID_OVEROPENED_FLAT_ANGLE, shave_end_tangents = true);
 }
 
 module hinge()
