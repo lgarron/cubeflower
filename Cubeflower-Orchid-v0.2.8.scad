@@ -32,6 +32,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v0.2.8
 
 - Fix hinge tangent shaving for in-place printing.
+- Adjust the support blocker the engraving so that it doesn't block the bottom of the inner plate for ≈90° hinge printing.
 
 ## v0.2.7
 
@@ -113,10 +114,9 @@ INNER_STAND_CLEARANCE = 0.25;
 
 LARGE_VALUE = 200;
 
-INNER_STAND_BASE_THICKNESS = 1.5;
 INNER_STAND_LIP_THICKNESS = 1.5;
 INNER_STAND_LIP_HEIGHT = 8;
-INNER_STAND_FLOOR_ELEVATION = INNER_STAND_BASE_THICKNESS;
+INNER_STAND_FLOOR_ELEVATION = INNER_STAND_LIP_THICKNESS;
 
 ENGRAVING_LEVEL_DEPTH = 0.15;
 
@@ -546,9 +546,9 @@ if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
             ],
             center = true);
         // Engraving
-        translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION / 2 ])
-            cube([ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION + _EPSILON ],
-                 center = true);
+        translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON ]) cube(
+            [ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE ],
+            center = true);
 
         translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
             text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
