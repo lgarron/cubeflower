@@ -227,11 +227,11 @@ module lid_part(w, d, h, pre_angle_to_lie_flat_on_table = false)
         cube([ HINGE_THICKNESS / 2, d, lid_radius - lid_radius_h + h ]);
 }
 
-VERSTION_TEXT_ENGRAVING_DEPTH = 0.25;
+VERSION_TEXT_ENGRAVING_DEPTH = 0.25;
 
 module engraving_text(text_string, _epsilon, halign = "center")
 {
-    translate([ 0, 0, -VERSTION_TEXT_ENGRAVING_DEPTH ]) linear_extrude(VERSTION_TEXT_ENGRAVING_DEPTH + _epsilon)
+    translate([ 0, 0, -VERSION_TEXT_ENGRAVING_DEPTH ]) linear_extrude(VERSION_TEXT_ENGRAVING_DEPTH + _epsilon)
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
@@ -421,10 +421,12 @@ module hinge()
 
             hinge_core();
         };
-        translate([ 0, -15, -HINGE_THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
-            resize([ 10 - 2, 0, VERSTION_TEXT_ENGRAVING_DEPTH ], auto = true) engraving_text(VERSION_TEXT, 0);
-        translate([ 0, 15, -HINGE_THICKNESS - _EPSILON ]) rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ])
-            resize([ 10 - 2, 0, VERSTION_TEXT_ENGRAVING_DEPTH ], auto = true) engraving_text(DESIGN_VARIANT_TEXT, 0);
+        translate([ 0, -15, -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE - _EPSILON ])
+            rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ]) resize([ 10 - 2, 0, VERSION_TEXT_ENGRAVING_DEPTH ], auto = true)
+                engraving_text(VERSION_TEXT, 0);
+        translate([ 0, 15, -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE - _EPSILON ])
+            rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ]) resize([ 10 - 2, 0, VERSION_TEXT_ENGRAVING_DEPTH ], auto = true)
+                engraving_text(DESIGN_VARIANT_TEXT, 0);
 
         debug_quarter_negative();
     }
