@@ -1,5 +1,24 @@
 LID_OVEROPENED_FLAT_ANGLE = 1.45;
 
+/*
+
+# Bambu Studio config steps
+
+- 0.4mm nozzle, 0.20mm strength
+- Global → Support → Support
+  - Enable support → yes
+  - Type: `tree(auto)`
+  - On build plate only → yes
+  - Remove small overhangs → no
+- Objects
+  - Support blocker sub-object:
+    - Change type → Support Blocker
+  - Solid infill sub-object:
+    - Change type → Modifier
+    - Sparse infill density: 100% (allow the infill pattern to be changed to rectilinear automatically)
+
+*/
+
 /********/
 
 DESIGN_VARIANT_TEXT = "ORCHID";
