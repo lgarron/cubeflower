@@ -1,0 +1,15 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - uses: samuelmeuli/action-snapcraft@v3
+      - run: sudo snap install openscad-nightly
+      - run: make setup
+      - run: openscad-nightly --enable lazy-union -o /tmp/CI.3mf *.scad # TODO: `--backend Manifold` is not available. This makes the build *much, much, much* slower.
