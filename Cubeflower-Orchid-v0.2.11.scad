@@ -29,6 +29,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.11
+
+- Increase hinge thickness to 7mm.
+
 ## v0.2.10
 
 - Lower the version engravings back into the hinges at the right depth.
@@ -109,7 +113,7 @@ printing.
 
 */
 
-HINGE_THICKNESS = 5;
+HINGE_THICKNESS = 7;
 
 DEFAULT_CLEARANCE = 0.1;
 MAIN_CLEARANCE_SCALE = 0.5;
