@@ -29,6 +29,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.10
+
+- Lower the version engravings back into the hinges at the right depth.
+
 ## v0.2.8
 
 - Fix hinge tangent shaving for in-place printing.
