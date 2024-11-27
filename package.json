@@ -3,6 +3,6 @@
 	"version": "0.2.11-dev",
 	"license": "CC-BY-NC-SA-4.0",
 	"dependencies": {
-		"scad": "v0.4.2"
+		"scad": "v0.4.3"
 	}
 }
