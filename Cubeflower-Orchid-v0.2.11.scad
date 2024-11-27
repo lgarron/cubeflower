@@ -31,6 +31,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 ## v0.2.11
 
+- Set all symmetry shaving to 0.15mm.
 - Increase hinge thickness to 7mm.
 
 ## v0.2.10
