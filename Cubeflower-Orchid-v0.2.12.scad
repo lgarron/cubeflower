@@ -3,7 +3,7 @@ LID_OVEROPENED_FLAT_ANGLE = 1.45;
 /********/
 
 DESIGN_VARIANT_TEXT = "ORCHID";
-VERSION_TEXT = "v0.2.11";
+VERSION_TEXT = "v0.2.12";
 // Avoid setting to 0 for printing unless you want overly shaved lids
 OPENING_ANGLE_EACH_SIDE = 75; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
 DEBUG = false;
