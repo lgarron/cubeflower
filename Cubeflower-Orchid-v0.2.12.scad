@@ -31,7 +31,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 ## v0.2.12
 
-- Increase lat offset to add omre tolerance for folding fully open.
+- Increase lat offset to add more tolerance for folding fully open.
 
 ## v0.2.11
 
