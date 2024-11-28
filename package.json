@@ -1,6 +1,6 @@
 {
 	"name": "@lgarron-3d/cube-box",
-	"version": "0.2.12",
+	"version": "0.2.13-dev",
 	"license": "CC-BY-NC-SA-4.0",
 	"dependencies": {
 		"scad": "v0.4.3"
