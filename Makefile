@@ -14,3 +14,7 @@ bun-install:
 .PHONY: publish
 publish:
 	npm publish
+
+.PHONY: bump-dev
+bump-dev:
+	bun run ./script/bump-dev.ts
