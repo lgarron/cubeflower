@@ -48,6 +48,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.13
+
+- Decrease hinge thickness to 6mm.
+
 ## v0.2.12
 
 - Increase lat offset to add more tolerance for folding fully open.
@@ -137,7 +141,7 @@ printing.
 
 */
 
-HINGE_THICKNESS = 7;
+HINGE_THICKNESS = 6;
 
 DEFAULT_CLEARANCE = 0.1;
 MAIN_CLEARANCE_SCALE = 0.5;
