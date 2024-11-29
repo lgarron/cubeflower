@@ -22,7 +22,7 @@ LID_OVEROPENED_FLAT_ANGLE = 1.45;
 /********/
 
 DESIGN_VARIANT_TEXT = "ORCHID";
-VERSION_TEXT = "v0.2.14";
+VERSION_TEXT = "v0.2.15";
 // Avoid setting to 0 for printing unless you want overly shaved lids
 OPENING_ANGLE_EACH_SIDE = 75; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
 DEBUG = false;
@@ -209,11 +209,13 @@ module rotate_for_lid_left(angle)
         translate([ HINGE_THICKNESS / 2, 0, HINGE_THICKNESS / 2 ]) children();
 }
 
+LATS_EACH_SIDE = 10; // TODO: computer from cube size
+
 module right_lats()
 {
     render() union()
     {
-        for (i = [-5:5])
+        for (i = [-LATS_EACH_SIDE:LATS_EACH_SIDE])
         {
             lat(i, 1);
         }
@@ -223,7 +225,7 @@ module left_lats()
 {
     render() union()
     {
-        for (i = [-5:5])
+        for (i = [-LATS_EACH_SIDE:LATS_EACH_SIDE])
         {
             lat(i, -1);
         }
@@ -409,6 +411,8 @@ module pre_lats_right()
     }
 }
 
+HINGE_LENGTH_COMPARISON = 57;
+
 module duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference()
 {
     rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE - 2 * LID_OVEROPENED_FLAT_ANGLE) difference()
@@ -424,13 +428,24 @@ module duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_differen
     }
 }
 
-module hinge_core()
+module hinge_core_hinge(second = false)
 {
 
-    rotate([ 90, 0, 0 ]) duplicate_and_translate([ 0, 0, -30 ]) translate([ 0, -HINGE_THICKNESS, 0 ])
+    rotate([ 90, 0, 0 ]) translate([ 0, 0, second ? -30 : 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) difference()
+    {
         small_hinge_30mm(main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
                          main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true,
-                         common_gear_offset = 0, extra_degrees = LID_OVEROPENED_FLAT_ANGLE, shave_end_tangents = true);
+                         common_gear_offset = 0, extra_degrees = LID_OVEROPENED_FLAT_ANGLE, shave_end_tangents = true,
+                         extend_block_ends = (CUBE_EDGE_LENGTH - HINGE_LENGTH_COMPARISON) / 2);
+
+        translate([ 0, 0, (LARGE_VALUE / 2 + 30) * (second ? 1 : -1) ]) cube(LARGE_VALUE, center = true);
+    }
+}
+
+module hinge_core()
+{
+    hinge_core_hinge(false);
+    hinge_core_hinge(true);
 }
 
 module hinge()
