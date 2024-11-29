@@ -48,6 +48,18 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.16
+
+- Double `plug_clearance_scale` for materials that print with less accurate tolerances.
+
+## v0.2.15
+
+- Extend hinges to support any cube edge length.
+
+## v0.2.14
+
+- Bump `scad`.
+
 ## v0.2.13
 
 - Decrease hinge thickness to 6mm.
@@ -434,7 +446,7 @@ module hinge_core_hinge(second = false)
     rotate([ 90, 0, 0 ]) translate([ 0, 0, second ? -30 : 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) difference()
     {
         small_hinge_30mm(main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
-                         main_clearance_scale = 0.5, plug_clearance_scale = 1, round_far_side = true,
+                         main_clearance_scale = 0.5, plug_clearance_scale = 2, round_far_side = true,
                          common_gear_offset = 0, extra_degrees = LID_OVEROPENED_FLAT_ANGLE, shave_end_tangents = true,
                          extend_block_ends = (CUBE_EDGE_LENGTH - HINGE_LENGTH_COMPARISON) / 2);
 
