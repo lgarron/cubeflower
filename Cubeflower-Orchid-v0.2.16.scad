@@ -1,5 +1,32 @@
 LID_OVEROPENED_FLAT_ANGLE = 1.45;
 
+/********/
+
+DESIGN_VARIANT_TEXT = "ORCHID";
+VERSION_TEXT = "v0.2.16";
+
+// Avoid setting to 0 for printing unless you want overly shaved lids
+CUBE_EDGE_LENGTH = 57;        // mm
+OPENING_ANGLE_EACH_SIDE = 75; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
+INCLUDE_INNER_STAND_ENGRAVING = false;
+INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
+
+DEBUG = false;
+PRINT_IN_PLACE = true;
+INCLUDE_SOLID_INFILL_SHAPE = !DEBUG;
+INCLUDE_SUPPORT_BLOCKER_SHAPE = !DEBUG && PRINT_IN_PLACE;
+SET_ON_SIDE_FOR_PRINTING = !DEBUG && PRINT_IN_PLACE;
+
+$fn = DEBUG ? 64 : 90;
+LID_TOP_FN = DEBUG ? 64 : 360;
+
+/********/
+
+include <./node_modules/scad/duplicate.scad>
+include <./node_modules/scad/minkowski_shell.scad>
+include <./node_modules/scad/round_bevel.scad>
+include <./node_modules/scad/small_hinge.scad>
+
 /*
 
 # Bambu Studio config steps
@@ -18,33 +45,6 @@ LID_OVEROPENED_FLAT_ANGLE = 1.45;
     - Sparse infill density: 100% (allow the infill pattern to be changed to rectilinear automatically)
 
 */
-
-/********/
-
-DESIGN_VARIANT_TEXT = "ORCHID";
-VERSION_TEXT = "v0.2.16";
-// Avoid setting to 0 for printing unless you want overly shaved lids
-OPENING_ANGLE_EACH_SIDE = 75; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
-DEBUG = false;
-INCLUDE_INNER_STAND_ENGRAVING = false;
-PRINT_IN_PLACE = true;
-
-INCLUDE_SOLID_INFILL_SHAPE = true;
-INCLUDE_SUPPORT_BLOCKER_SHAPE = PRINT_IN_PLACE;
-
-CUBE_EDGE_LENGTH = 57; // mm
-
-INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
-
-SET_ON_SIDE_FOR_PRINTING = !DEBUG && PRINT_IN_PLACE;
-
-$fn = DEBUG ? 64 : 90;
-LID_TOP_FN = DEBUG ? 64 : 360;
-
-include <./node_modules/scad/duplicate.scad>
-include <./node_modules/scad/minkowski_shell.scad>
-include <./node_modules/scad/round_bevel.scad>
-include <./node_modules/scad/small_hinge.scad>
 
 /*
 
