@@ -23,6 +23,7 @@ FORCE_INCLUDE_STAND_PLUGS = false;
 
 $fn = DEBUG ? 64 : 90;
 LID_TOP_FN = DEBUG ? 64 : 360;
+THUMB_DIVOTS_FN = DEBUG ? 64 : 360;
 
 /********/
 
@@ -55,6 +56,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v0.2.18
 
 - Add inner stand plugs when printing the inner stand separately.
+- Adjust thumb divots to give more leverage for retraction.
 
 ## v0.2.17
 
@@ -338,8 +340,8 @@ module bottom_rounding_negative()
 
 THUMB_DIVOT_RADIUS = 20;
 THUMB_DIVOT_DEPTH = 0.75;
-THUMB_DIVOT_X = CUBE_EDGE_LENGTH * 0.35;
-THUMB_DIVOT_Y = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH * 0.92;
+THUMB_DIVOT_X = CUBE_EDGE_LENGTH * 0.15;
+THUMB_DIVOT_Y = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH * 0.97;
 
 HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0;
 HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH = 5;
@@ -608,7 +610,7 @@ module lids()
             duplicate_and_mirror([ 0, 1, 0 ]) translate([
                 THUMB_DIVOT_X, -CUBE_EDGE_LENGTH / 2 - OUTER_SHELL_THICKNESS - THUMB_DIVOT_RADIUS + THUMB_DIVOT_DEPTH,
                 THUMB_DIVOT_Y
-            ]) sphere(THUMB_DIVOT_RADIUS);
+            ]) sphere(THUMB_DIVOT_RADIUS, $fn = THUMB_DIVOTS_FN);
         }
 
         translate([
