@@ -353,6 +353,7 @@ PLUG_HEAD_RADIUS = 3.2;
 PLUG_HEIGHT = HINGE_THICKNESS * 0.55;
 PLUG_HEAD_HEIGHT = 1.5;
 PLUG_TOP_EXPANSION_HEIGHT = 1;
+PLUG_TOP_EXPANSION_HEIGHT_EXTRA = 0.2;
 PLUG_TOP_EXPANSION_EXTRA_RADIUS = 1;
 
 module stand_plug(negative = false)
@@ -364,18 +365,18 @@ module stand_plug(negative = false)
         {
             union()
             {
-                translate([ 0, 15, -PLUG_HEIGHT ])
+                translate([ 0, -15, -PLUG_HEIGHT ])
                     cylinder(h = PLUG_HEIGHT + INNER_STAND_CLEARANCE + _EPSILON - PLUG_TOP_EXPANSION_HEIGHT,
                              r = PLUG_STEM_RADIUS);
-                translate([ 0, 15, -PLUG_TOP_EXPANSION_HEIGHT + INNER_STAND_CLEARANCE ])
-                    cylinder(h = PLUG_TOP_EXPANSION_HEIGHT + _EPSILON, r1 = PLUG_STEM_RADIUS,
-                             r2 = PLUG_STEM_RADIUS + PLUG_TOP_EXPANSION_EXTRA_RADIUS);
+                translate([ 0, -15, -PLUG_TOP_EXPANSION_HEIGHT + INNER_STAND_CLEARANCE ])
+                    cylinder(h = PLUG_TOP_EXPANSION_HEIGHT + PLUG_TOP_EXPANSION_HEIGHT_EXTRA + _EPSILON,
+                             r1 = PLUG_STEM_RADIUS, r2 = PLUG_STEM_RADIUS + PLUG_TOP_EXPANSION_EXTRA_RADIUS);
             }
-            sphere(clearance + _EPSILON);
+            sphere(clearance);
         }
         render() minkowski()
         {
-            translate([ 0, 15, -PLUG_HEIGHT - clearance ])
+            translate([ 0, -15, -PLUG_HEIGHT - clearance ])
                 cylinder(h = PLUG_HEAD_HEIGHT -
                              HINGE_PLUG_ROUNDING, // Note: the height purposely excludes clearance for a snug top.
                          r = PLUG_HEAD_RADIUS + clearance - HINGE_PLUG_ROUNDING);
@@ -500,15 +501,20 @@ module duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_differen
 
 module hinge_core_hinge(second = false)
 {
-
-    rotate([ 90, 0, 0 ]) translate([ 0, 0, second ? -30 : 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) difference()
+    translate([ 0, second ? 30 : 0, 0 ]) difference()
     {
-        small_hinge_30mm(main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
-                         main_clearance_scale = 0.5, plug_clearance_scale = 2, round_far_side = true,
-                         common_gear_offset = 0, extra_degrees = LID_OVEROPENED_FLAT_ANGLE, shave_end_tangents = true,
-                         extend_block_ends = (CUBE_EDGE_LENGTH - HINGE_LENGTH_COMPARISON) / 2);
+        rotate([ 90, 0, 0 ]) translate([ 0, -HINGE_THICKNESS, 0 ]) difference()
+        {
+            small_hinge_30mm(main_thickness = HINGE_THICKNESS, rotate_angle_each_side = OPENING_ANGLE_EACH_SIDE,
+                             main_clearance_scale = 0.5, plug_clearance_scale = 2, round_far_side = true,
+                             common_gear_offset = 0, extra_degrees = LID_OVEROPENED_FLAT_ANGLE,
+                             shave_end_tangents = true,
+                             extend_block_ends = (CUBE_EDGE_LENGTH - HINGE_LENGTH_COMPARISON) / 2);
 
-        translate([ 0, 0, (LARGE_VALUE / 2 + 30) * (second ? 1 : -1) ]) cube(LARGE_VALUE, center = true);
+            translate([ 0, 0, (LARGE_VALUE / 2 + 30) * (second ? 1 : -1) ]) cube(LARGE_VALUE, center = true);
+        }
+
+        stand_plug(true);
     }
 }
 
@@ -551,7 +557,6 @@ module hinge()
             rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ]) resize([ 10 - 2, 0, VERSION_TEXT_ENGRAVING_DEPTH ], auto = true)
                 engraving_text(DESIGN_VARIANT_TEXT, 0);
 
-        duplicate_and_mirror([ 0, 1, 0 ]) stand_plug(true);
         debug_quarter_negative();
     }
 }
