@@ -337,7 +337,7 @@ THUMB_DIVOT_Y = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH * 0.92;
 HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0.4;
 HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH = 5;
 
-module hinge_connector(horizontal_clearance = 0, vertical_clearance = 0)
+module hinge_connectors(horizontal_clearance = 0, vertical_clearance = 0)
 {
     difference()
     {
@@ -362,6 +362,8 @@ module hinge_connector(horizontal_clearance = 0, vertical_clearance = 0)
                 HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT + vertical_clearance +
                 _EPSILON
             ]);
+
+        debug_quarter_negative();
     }
 }
 
@@ -385,7 +387,7 @@ module inner_stand()
 
             if (!PRINT_IN_PLACE)
             {
-                hinge_connector(horizontal_clearance = 0.05, vertical_clearance = 0.05);
+                hinge_connectors(horizontal_clearance = 0.05, vertical_clearance = 0.05);
             }
         }
 
@@ -590,7 +592,7 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
 
         inner_stand();
     }
-    hinge_connector();
+    hinge_connectors();
     hinge();
     lids();
 }
