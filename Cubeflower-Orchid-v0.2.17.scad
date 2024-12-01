@@ -3,7 +3,7 @@ LID_OVEROPENED_FLAT_ANGLE = 1.45;
 /********/
 
 DESIGN_VARIANT_TEXT = "ORCHID";
-VERSION_TEXT = "v0.2.16";
+VERSION_TEXT = "v0.2.17";
 
 // Avoid setting to 0 for printing unless you want overly shaved lids
 CUBE_EDGE_LENGTH = 57;        // mm
