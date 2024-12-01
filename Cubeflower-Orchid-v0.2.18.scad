@@ -17,6 +17,9 @@ PRINT_IN_PLACE = false;
 INCLUDE_SOLID_INFILL_SHAPE = !DEBUG;
 INCLUDE_SUPPORT_BLOCKER_SHAPE = !DEBUG && PRINT_IN_PLACE;
 SET_ON_SIDE_FOR_PRINTING = !DEBUG && PRINT_IN_PLACE;
+SEPARATE_INNER_STAND_FOR_PRINTING = !PRINT_IN_PLACE;
+
+FORCE_INCLUDE_STAND_PLUGS = false;
 
 $fn = DEBUG ? 64 : 90;
 LID_TOP_FN = DEBUG ? 64 : 360;
@@ -48,6 +51,10 @@ include <./node_modules/scad/small_hinge.scad>
 */
 
 /*
+
+## v0.2.18
+
+- Add inner stand plugs when printing the inner stand separately.
 
 ## v0.2.17
 
@@ -338,30 +345,54 @@ HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0;
 HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH = 5;
 
 HINGE_PLUG_ROUNDING = 1;
+INNER_STAND_PLUG_CLEARANCE = 0.1;
+PLUG_STEM_RADIUS = 3;
+PLUG_HEAD_RADIUS = 3.2;
+PLUG_HEIGHT = HINGE_THICKNESS * 0.55;
+PLUG_HEAD_HEIGHT = 1.5;
+PLUG_TOP_EXPANSION_HEIGHT = 1;
+PLUG_TOP_EXPANSION_EXTRA_RADIUS = 1;
 
 module stand_plug(negative = false)
 {
-    translate([ 0, 15, -HINGE_THICKNESS + 2 ])
-        cylinder(h = HINGE_THICKNESS - 2 + INNER_STAND_CLEARANCE + _EPSILON, r = 3 + (negative ? 0.1 : 0));
-    minkowski()
+    if (SEPARATE_INNER_STAND_FOR_PRINTING || FORCE_INCLUDE_STAND_PLUGS)
     {
-        translate([ 0, 15, -HINGE_THICKNESS + 2 ])
-            cylinder(h = 2 + _EPSILON - HINGE_PLUG_ROUNDING, r = 3.2 + (negative ? 0.1 : 0) - HINGE_PLUG_ROUNDING);
-        sphere(HINGE_PLUG_ROUNDING);
+        clearance = (negative ? INNER_STAND_PLUG_CLEARANCE : 0);
+        render() minkowski()
+        {
+            union()
+            {
+                translate([ 0, 15, -PLUG_HEIGHT ])
+                    cylinder(h = PLUG_HEIGHT + INNER_STAND_CLEARANCE + _EPSILON - PLUG_TOP_EXPANSION_HEIGHT,
+                             r = PLUG_STEM_RADIUS);
+                translate([ 0, 15, -PLUG_TOP_EXPANSION_HEIGHT + INNER_STAND_CLEARANCE ])
+                    cylinder(h = PLUG_TOP_EXPANSION_HEIGHT + _EPSILON, r1 = PLUG_STEM_RADIUS,
+                             r2 = PLUG_STEM_RADIUS + PLUG_TOP_EXPANSION_EXTRA_RADIUS);
+            }
+            sphere(clearance + _EPSILON);
+        }
+        render() minkowski()
+        {
+            translate([ 0, 15, -PLUG_HEIGHT - clearance ])
+                cylinder(h = PLUG_HEAD_HEIGHT -
+                             HINGE_PLUG_ROUNDING, // Note: the height purposely excludes clearance for a snug top.
+                         r = PLUG_HEAD_RADIUS + clearance - HINGE_PLUG_ROUNDING);
+            sphere(HINGE_PLUG_ROUNDING);
+        }
     }
 }
 
-module hinge_connectors(horizontal_clearance = 0, vertical_clearance = 0)
+module hinge_connectors(horizontal_clearance = 0.05, vertical_clearance = 0)
 {
     difference()
     {
         duplicate_and_mirror([ 0, 1, 0 ]) translate([
-            -HINGE_THICKNESS - horizontal_clearance, 10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE - horizontal_clearance,
+            -HINGE_THICKNESS - horizontal_clearance, 10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + horizontal_clearance,
             -HINGE_THICKNESS / 2
         ])
             cube([
-                HINGE_THICKNESS * 2 - __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE + 2 * horizontal_clearance,
-                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + 2 * horizontal_clearance,
+                HINGE_THICKNESS * 2 - __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE - 2 * horizontal_clearance,
+                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE - 2 * horizontal_clearance,
                 HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT +
                 vertical_clearance
             ]);
@@ -403,7 +434,7 @@ module inner_stand()
 
             if (!PRINT_IN_PLACE)
             {
-                hinge_connectors(horizontal_clearance = 0.05, vertical_clearance = 0.05);
+                hinge_connectors();
             }
         }
 
@@ -591,7 +622,7 @@ module lids()
     }
 }
 
-if (!PRINT_IN_PLACE)
+if (SEPARATE_INNER_STAND_FOR_PRINTING)
 {
     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
     {
@@ -605,7 +636,7 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
     {
         % main_cube_on_stand();
     }
-    if (PRINT_IN_PLACE)
+    if (!SEPARATE_INNER_STAND_FOR_PRINTING)
     {
 
         inner_stand();
@@ -634,6 +665,7 @@ if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
         hinge_core();
         translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
             text("SOLID INFILL", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+        hinge_connectors();
     }
 }
 
