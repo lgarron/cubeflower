@@ -18,3 +18,7 @@ publish:
 .PHONY: bump-dev
 bump-dev:
 	bun run ./script/bump-dev.ts
+
+.PHONY: reset
+reset:
+	rm -rf ./node_modules
