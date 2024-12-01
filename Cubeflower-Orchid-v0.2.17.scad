@@ -7,12 +7,13 @@ VERSION_TEXT = "v0.2.17";
 
 // Avoid setting to 0 for printing unless you want overly shaved lids
 CUBE_EDGE_LENGTH = 57;        // mm
-OPENING_ANGLE_EACH_SIDE = 75; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
+OPENING_ANGLE_EACH_SIDE = 90; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
 INCLUDE_INNER_STAND_ENGRAVING = false;
+FILL_INNER_STAND_ENGRAVING = true;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
 DEBUG = false;
-PRINT_IN_PLACE = true;
+PRINT_IN_PLACE = false;
 INCLUDE_SOLID_INFILL_SHAPE = !DEBUG;
 INCLUDE_SUPPORT_BLOCKER_SHAPE = !DEBUG && PRINT_IN_PLACE;
 SET_ON_SIDE_FOR_PRINTING = !DEBUG && PRINT_IN_PLACE;
@@ -47,6 +48,10 @@ include <./node_modules/scad/small_hinge.scad>
 */
 
 /*
+
+## v0.2.17
+
+- Switch to printing the stand separately, with optional filled engraving.
 
 ## v0.2.16
 
@@ -588,6 +593,16 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
     hinge_connector();
     hinge();
     lids();
+}
+
+if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
+{
+    color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
+        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
+    {
+        render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - ENGRAVING_LEVEL_DEPTH * 2 ])
+            linear_extrude(ENGRAVING_LEVEL_DEPTH * 2) import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
+    }
 }
 
 GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
