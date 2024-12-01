@@ -343,17 +343,16 @@ THUMB_DIVOT_DEPTH = 0.75;
 THUMB_DIVOT_X = CUBE_EDGE_LENGTH * 0.15;
 THUMB_DIVOT_Y = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH * 0.97;
 
-HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0;
+HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0.2;
 HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH = 5;
 
 HINGE_PLUG_ROUNDING = 1;
 INNER_STAND_PLUG_CLEARANCE = 0.1;
 PLUG_STEM_RADIUS = 3;
-PLUG_HEAD_RADIUS = 3.2;
+PLUG_HEAD_RADIUS = 3.1;
 PLUG_HEIGHT = HINGE_THICKNESS * 0.55;
 PLUG_HEAD_HEIGHT = 1.5;
 PLUG_TOP_EXPANSION_HEIGHT = 1;
-PLUG_TOP_EXPANSION_HEIGHT_EXTRA = 0.2;
 PLUG_TOP_EXPANSION_EXTRA_RADIUS = 1;
 
 module stand_plug(negative = false)
@@ -368,9 +367,11 @@ module stand_plug(negative = false)
                 translate([ 0, -15, -PLUG_HEIGHT ])
                     cylinder(h = PLUG_HEIGHT + INNER_STAND_CLEARANCE + _EPSILON - PLUG_TOP_EXPANSION_HEIGHT,
                              r = PLUG_STEM_RADIUS);
+                h = PLUG_TOP_EXPANSION_HEIGHT + (negative ? _EPSILON : clearance * 2);
                 translate([ 0, -15, -PLUG_TOP_EXPANSION_HEIGHT + INNER_STAND_CLEARANCE ])
-                    cylinder(h = PLUG_TOP_EXPANSION_HEIGHT + PLUG_TOP_EXPANSION_HEIGHT_EXTRA + _EPSILON,
-                             r1 = PLUG_STEM_RADIUS, r2 = PLUG_STEM_RADIUS + PLUG_TOP_EXPANSION_EXTRA_RADIUS);
+                    cylinder(h = h, r1 = PLUG_STEM_RADIUS,
+                             r2 = PLUG_STEM_RADIUS + h // Reuse `h` so that we have an angle of 45°.
+                    );
             }
             sphere(clearance);
         }
@@ -385,31 +386,23 @@ module stand_plug(negative = false)
     }
 }
 
-module hinge_connectors(horizontal_clearance = 0.05, vertical_clearance = 0)
+module hinge_connectors()
 {
     difference()
     {
         duplicate_and_mirror([ 0, 1, 0 ]) translate([
-            -HINGE_THICKNESS - horizontal_clearance, 10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + horizontal_clearance,
+            -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE / 2 +
+                __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE,
+            10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE,
             -HINGE_THICKNESS / 2
         ])
             cube([
-                HINGE_THICKNESS * 2 - __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE - 2 * horizontal_clearance,
-                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE - 2 * horizontal_clearance,
-                HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT +
-                vertical_clearance
+                HINGE_THICKNESS * 2 - __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE -
+                    2 * __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE,
+                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE - 2 * __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE,
+                HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE +
+                HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT
             ]);
-        // duplicate_and_mirror([ 0, 1, 0 ]) translate([
-        //     -HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH / 2 + horizontal_clearance,
-        //     15 + -HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH / 2 + horizontal_clearance,
-        //     INNER_STAND_CLEARANCE
-        // ])
-        //     cube([
-        //         HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH - horizontal_clearance * 2,
-        //         HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH - horizontal_clearance * 2,
-        //         HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT + vertical_clearance +
-        //         _EPSILON
-        //     ]);
 
         duplicate_and_mirror([ 0, 1, 0 ]) stand_plug(true);
 
