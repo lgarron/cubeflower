@@ -334,8 +334,22 @@ THUMB_DIVOT_DEPTH = 0.75;
 THUMB_DIVOT_X = CUBE_EDGE_LENGTH * 0.35;
 THUMB_DIVOT_Y = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH * 0.92;
 
-HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0.4;
+HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0;
 HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH = 5;
+
+HINGE_PLUG_ROUNDING = 1;
+
+module stand_plug(negative = false)
+{
+    translate([ 0, 15, -HINGE_THICKNESS + 2 ])
+        cylinder(h = HINGE_THICKNESS - 2 + INNER_STAND_CLEARANCE + _EPSILON, r = 3 + (negative ? 0.1 : 0));
+    minkowski()
+    {
+        translate([ 0, 15, -HINGE_THICKNESS + 2 ])
+            cylinder(h = 2 + _EPSILON - HINGE_PLUG_ROUNDING, r = 3.2 + (negative ? 0.1 : 0) - HINGE_PLUG_ROUNDING);
+        sphere(HINGE_PLUG_ROUNDING);
+    }
+}
 
 module hinge_connectors(horizontal_clearance = 0, vertical_clearance = 0)
 {
@@ -351,17 +365,19 @@ module hinge_connectors(horizontal_clearance = 0, vertical_clearance = 0)
                 HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT +
                 vertical_clearance
             ]);
-        duplicate_and_mirror([ 0, 1, 0 ]) translate([
-            -HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH / 2 + horizontal_clearance,
-            15 + -HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH / 2 + horizontal_clearance,
-            INNER_STAND_CLEARANCE
-        ])
-            cube([
-                HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH - horizontal_clearance * 2,
-                HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH - horizontal_clearance * 2,
-                HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT + vertical_clearance +
-                _EPSILON
-            ]);
+        // duplicate_and_mirror([ 0, 1, 0 ]) translate([
+        //     -HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH / 2 + horizontal_clearance,
+        //     15 + -HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH / 2 + horizontal_clearance,
+        //     INNER_STAND_CLEARANCE
+        // ])
+        //     cube([
+        //         HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH - horizontal_clearance * 2,
+        //         HINGE_CONNECTOR_ALIGNMENT_STUB_WIDTH - horizontal_clearance * 2,
+        //         HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT + vertical_clearance +
+        //         _EPSILON
+        //     ]);
+
+        duplicate_and_mirror([ 0, 1, 0 ]) stand_plug(true);
 
         debug_quarter_negative();
     }
@@ -411,6 +427,7 @@ module inner_stand()
 
         debug_quarter_negative();
     }
+    duplicate_and_mirror([ 0, 1, 0 ]) stand_plug(false);
 }
 
 module pre_lats_right()
@@ -501,6 +518,7 @@ module hinge()
             rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ]) resize([ 10 - 2, 0, VERSION_TEXT_ENGRAVING_DEPTH ], auto = true)
                 engraving_text(DESIGN_VARIANT_TEXT, 0);
 
+        duplicate_and_mirror([ 0, 1, 0 ]) stand_plug(true);
         debug_quarter_negative();
     }
 }
