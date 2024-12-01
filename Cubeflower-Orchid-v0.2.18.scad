@@ -392,14 +392,12 @@ module hinge_connectors(negative = false)
     difference()
     {
         duplicate_and_mirror([ 0, 1, 0 ]) translate([
-            -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE / 2 +
-                __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE - (negative ? DEFAULT_CLEARANCE : 0),
+            -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE,
             10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE - (negative ? DEFAULT_CLEARANCE : 0), -HINGE_THICKNESS / 2
         ])
             cube([
-                HINGE_THICKNESS * 2 - __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE -
-                    2 * __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE + 2 * (negative ? DEFAULT_CLEARANCE : 0),
-                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + 2 * (negative ? DEFAULT_CLEARANCE : 0),
+                HINGE_THICKNESS * 2 - 2 * __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE,
+                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE,
                 HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT -
                     (negative ? 0 : DEFAULT_CLEARANCE)
             ]);
