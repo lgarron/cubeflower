@@ -649,9 +649,9 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
 
         inner_stand();
     }
-    hinge_connectors();
-    hinge();
-    lids();
+    color("#ff2200") hinge_connectors();
+    color("#ff8844") hinge();
+    color("#5588ff") lids();
 }
 
 if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
