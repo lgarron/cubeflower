@@ -58,6 +58,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 - Move thumb divots slightly apart.
 - Change overopened angle to 0° for now.
+- Slant the lats where they touch near the hinge.
 
 ## v0.2.18
 
@@ -216,18 +217,25 @@ BASE_LATTICE_OFFSET_MESHING_EXTRA = -__SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE 
 BASE_LATTICE_OFFSET = HINGE_THICKNESS + DEFAULT_CLEARANCE + BASE_LATTICE_OFFSET_MESHING_EXTRA;
 BASE_LATTICE_COMPLEMENT_OFFSET = HINGE_THICKNESS;
 
+LAT_SLANT = 45;
+
 module lat(i, mirror_scale)
 {
-    scale([ mirror_scale, 1, 1 ]) translate([
-        -LARGE_VALUE / 2, i * LAT_WIDTH * 2 + LAT_WIDTH / 2 + mirror_scale * LAT_WIDTH / 2 - SLIDING_CLEARANCE,
-        -BASE_HEIGHT - _EPSILON -
-        LARGE_VALUE
-    ])
-        cube([
-            LARGE_VALUE, LAT_WIDTH + SLIDING_CLEARANCE * 2,
-            GEAR_MAX_RADIAL_DIVERGENCE * 2 + _EPSILON + DEFAULT_CLEARANCE +
+    scale([ mirror_scale, 1, 1 ]) difference()
+    {
+        translate([
+            -LARGE_VALUE / 2, i * LAT_WIDTH * 2 + LAT_WIDTH / 2 + mirror_scale * LAT_WIDTH / 2 - SLIDING_CLEARANCE,
+            -BASE_HEIGHT - _EPSILON -
             LARGE_VALUE
-        ]);
+        ])
+            cube([
+                LARGE_VALUE, LAT_WIDTH + SLIDING_CLEARANCE * 2,
+                GEAR_MAX_RADIAL_DIVERGENCE * 2 + _EPSILON + DEFAULT_CLEARANCE +
+                LARGE_VALUE
+            ]);
+        translate([ BASE_LATTICE_OFFSET, 0, -HINGE_THICKNESS + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE ])
+            rotate([ 0, 90 - LAT_SLANT, 0 ]) translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true);
+    }
 }
 
 module rotate_for_lid_right(angle)
@@ -244,6 +252,15 @@ module rotate_for_lid_left(angle)
 
 LATS_EACH_SIDE = 10; // TODO: computer from cube size
 
+module lats_bottom_slant_right()
+{
+
+    color("red")
+        translate([ BASE_LATTICE_OFFSET - 2 * DEFAULT_CLEARANCE, 0, -HINGE_THICKNESS + __SMALL_HINGE__HINGE_SHAVE ])
+            rotate([ 0, LAT_SLANT, 0 ]) translate([ LARGE_VALUE / 2, 0, -LARGE_VALUE / 2 ])
+                cube(LARGE_VALUE, center = true);
+}
+
 module right_lats()
 {
     render() union()
@@ -252,8 +269,10 @@ module right_lats()
         {
             lat(i, 1);
         }
+        lats_bottom_slant_right();
     }
 }
+
 module left_lats()
 {
     render() union()
@@ -262,6 +281,7 @@ module left_lats()
         {
             lat(i, -1);
         }
+        mirror([ 1, 0, 0 ]) lats_bottom_slant_right();
     }
 }
 
