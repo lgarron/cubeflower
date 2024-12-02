@@ -355,11 +355,12 @@ PLUG_HEAD_HEIGHT = 1.5;
 PLUG_TOP_EXPANSION_HEIGHT = 1;
 PLUG_TOP_EXPANSION_EXTRA_RADIUS = 1;
 
+INCLUDE_STAND_PLUGS = SEPARATE_INNER_STAND_FOR_PRINTING || FORCE_INCLUDE_STAND_PLUGS;
 module stand_plug(negative = false)
 {
-    if (SEPARATE_INNER_STAND_FOR_PRINTING || FORCE_INCLUDE_STAND_PLUGS)
+    if (INCLUDE_STAND_PLUGS)
     {
-        clearance = (negative ? INNER_STAND_PLUG_CLEARANCE : 0);
+        negative_clearance = (INCLUDE_STAND_PLUGS && negative ? INNER_STAND_PLUG_CLEARANCE : 0);
         render() minkowski()
         {
             union()
@@ -368,20 +369,20 @@ module stand_plug(negative = false)
                     cylinder(h = PLUG_HEIGHT + INNER_STAND_CLEARANCE + _EPSILON - PLUG_TOP_EXPANSION_HEIGHT,
                              r = PLUG_STEM_RADIUS);
                 h = PLUG_TOP_EXPANSION_HEIGHT + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT + INNER_STAND_CLEARANCE +
-                    _EPSILON;
+                    INNER_STAND_PLUG_CLEARANCE + _EPSILON;
                 translate([ 0, -15, -PLUG_TOP_EXPANSION_HEIGHT ])
                     cylinder(h = h, r1 = PLUG_STEM_RADIUS,
                              r2 = PLUG_STEM_RADIUS + h // Reuse `h` so that we have an angle of 45°.
                     );
             }
-            sphere(clearance);
+            sphere(negative_clearance);
         }
         render() minkowski()
         {
-            translate([ 0, -15, -PLUG_HEIGHT - clearance ])
+            translate([ 0, -15, -PLUG_HEIGHT - negative_clearance ])
                 cylinder(h = PLUG_HEAD_HEIGHT -
                              HINGE_PLUG_ROUNDING, // Note: the height purposely excludes clearance for a snug top.
-                         r = PLUG_HEAD_RADIUS + clearance - HINGE_PLUG_ROUNDING);
+                         r = PLUG_HEAD_RADIUS + negative_clearance - HINGE_PLUG_ROUNDING);
             sphere(HINGE_PLUG_ROUNDING);
         }
     }
@@ -391,15 +392,16 @@ module hinge_connectors(negative = false)
 {
     difference()
     {
+        negative_clearance = (INCLUDE_STAND_PLUGS && negative ? INNER_STAND_PLUG_CLEARANCE : 0);
         duplicate_and_mirror([ 0, 1, 0 ]) translate([
-            -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE,
-            10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE - (negative ? DEFAULT_CLEARANCE : 0), -HINGE_THICKNESS / 2
+            -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE - negative_clearance,
+            10 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE - negative_clearance, -HINGE_THICKNESS / 2
         ])
             cube([
-                HINGE_THICKNESS * 2 - 2 * __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE,
-                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE,
-                HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT -
-                    (negative ? 0 : DEFAULT_CLEARANCE)
+                HINGE_THICKNESS * 2 - 2 * __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE + 2 * negative_clearance,
+                10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE + 2 * negative_clearance,
+                HINGE_THICKNESS / 2 + INNER_STAND_CLEARANCE + HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT +
+                negative_clearance
             ]);
 
         duplicate_and_mirror([ 0, 1, 0 ]) stand_plug(negative = !negative);
