@@ -59,6 +59,7 @@ include <./node_modules/scad/small_hinge.scad>
 - Move thumb divots slightly apart.
 - Change overopened angle to 0° for now.
 - Slant the lats where they touch near the hinge.
+- Widen the bottom rounding.
 
 ## v0.2.18
 
@@ -328,8 +329,8 @@ module engraving_text(text_string, _epsilon, halign = "center")
         text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
 }
 
-BOTTOM_ROUNDING_RADIUS_X = 5;
-BOTTOM_ROUNDING_RADIUS_Z = 12;
+BOTTOM_ROUNDING_RADIUS_X = 8;
+BOTTOM_ROUNDING_RADIUS_Z = 18;
 
 module bottom_rounding_negative()
 {
