@@ -1,4 +1,4 @@
-LID_OVEROPENED_FLAT_ANGLE = 1.45;
+LID_OVEROPENED_FLAT_ANGLE = 0;
 
 /********/
 
@@ -57,6 +57,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v0.2.19
 
 - Move thumb divots slightly apart.
+- Change overopened angle to 0° for now.
 
 ## v0.2.18
 
