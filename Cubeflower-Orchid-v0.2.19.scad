@@ -53,6 +53,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.19
+
+- Move thumb divots slightly apart.
+
 ## v0.2.18
 
 - Add inner stand plugs when printing the inner stand separately.
@@ -340,7 +344,7 @@ module bottom_rounding_negative()
 
 THUMB_DIVOT_RADIUS = 20;
 THUMB_DIVOT_DEPTH = 0.75;
-THUMB_DIVOT_X = CUBE_EDGE_LENGTH * 0.15;
+THUMB_DIVOT_X = CUBE_EDGE_LENGTH / 6;
 THUMB_DIVOT_Y = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH * 0.97;
 
 HINGE_CONNECTOR_ALIGNMENT_EXTRA_HEIGHT = 0.2;
