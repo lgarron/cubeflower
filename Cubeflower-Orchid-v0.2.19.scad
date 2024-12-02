@@ -60,6 +60,7 @@ include <./node_modules/scad/small_hinge.scad>
 - Change overopened angle to 0° for now.
 - Slant the lats where they touch near the hinge.
 - Widen the bottom rounding.
+- Adjust inner stand plugs.
 
 ## v0.2.18
 
