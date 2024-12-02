@@ -16,6 +16,8 @@ For now, consider printing [v0.1.6](https://github.com/lgarron/cubeflower/blob/v
 
 `v0.2.x` trades off carrying size for more reliance on material strength and printer tolerances. I personally get my best results with [Burgundy PLA-CF](https://us.store.bambulab.com/products/pla-cf) on a [Bambu Lab X1 Carbon](https://us.store.bambulab.com/products/x1-carbon).
 
+Of the 0.2.x versions, [v0.2.14](https://github.com/lgarron/cubeflower/blob/v0.2.14/Cubeflower-Orchid-v0.2.14.scad) is currently the most battle-tested.
+
 ## License
 
 Cubeflower is licensed under the [Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en) license. This means:
