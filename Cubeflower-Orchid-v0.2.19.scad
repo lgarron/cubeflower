@@ -61,6 +61,7 @@ include <./node_modules/scad/small_hinge.scad>
 - Slant the lats where they touch near the hinge.
 - Widen the bottom rounding.
 - Adjust inner stand plugs.
+- Lower the inner stand engraving level depth to one layer.
 
 ## v0.2.18
 
@@ -191,7 +192,7 @@ INNER_STAND_LIP_THICKNESS = 1.5;
 INNER_STAND_LIP_HEIGHT = 8;
 INNER_STAND_FLOOR_ELEVATION = INNER_STAND_LIP_THICKNESS;
 
-ENGRAVING_LEVEL_DEPTH = 0.15;
+INNER_STAND_ENGRAVING_LEVEL_DEPTH = 0.2;
 
 LAT_WIDTH = 4;
 
@@ -477,8 +478,8 @@ module inner_stand()
         {
             render() union()
             {
-                render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - ENGRAVING_LEVEL_DEPTH * 2 ])
-                    linear_extrude(ENGRAVING_LEVEL_DEPTH * 2 + _EPSILON)
+                render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION + _EPSILON - INNER_STAND_ENGRAVING_LEVEL_DEPTH ])
+                    linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH + _EPSILON)
                         import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
             }
         }
@@ -682,8 +683,9 @@ if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
     color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
         rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
     {
-        render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - ENGRAVING_LEVEL_DEPTH * 2 ])
-            linear_extrude(ENGRAVING_LEVEL_DEPTH * 2) import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
+        render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
+            linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
+                import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
     }
 }
 
