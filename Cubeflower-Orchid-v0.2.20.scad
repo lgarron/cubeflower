@@ -57,6 +57,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v0.2.20
 
 - Adjust bottom rounding to avoid a very thin section.
+- Adjust plug head snugness.
 
 ## v0.2.19
 
@@ -370,7 +371,7 @@ HINGE_PLUG_ROUNDING = 1;
 INNER_STAND_PLUG_HORIZONTAL_CLEARANCE = 0.1;
 INNER_STAND_PLUG_VERTICAL_CLEARANCE = 0.05;
 PLUG_STEM_RADIUS = 3;
-PLUG_HEAD_RADIUS = 3.075;
+PLUG_HEAD_RADIUS = 3.125;
 PLUG_HEIGHT = HINGE_THICKNESS * 0.55;
 PLUG_HEAD_HEIGHT = 1.5;
 PLUG_TOP_EXPANSION_HEIGHT = 1;
@@ -403,7 +404,9 @@ module stand_plug(negative = false)
             translate([ 0, -15, -PLUG_HEIGHT - negative_clearance ])
                 cylinder(h = PLUG_HEAD_HEIGHT -
                              HINGE_PLUG_ROUNDING, // Note: the height purposely excludes clearance for a snug top.
-                         r = PLUG_HEAD_RADIUS + negative_clearance - HINGE_PLUG_ROUNDING);
+                         r = PLUG_HEAD_RADIUS + negative_clearance / 2 -
+                             HINGE_PLUG_ROUNDING // We purposely reduce the top clearance for a snug fit.
+                );
             sphere(HINGE_PLUG_ROUNDING);
         }
     }
