@@ -54,6 +54,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.20
+
+- Adjust bottom rounding to avoid a very thin section.
+
 ## v0.2.19
 
 - Move thumb divots slightly apart.
@@ -336,35 +340,22 @@ BOTTOM_ROUNDING_RADIUS_Z = 18;
 
 module bottom_rounding_negative()
 {
-    // TODO: make this work
     render() difference()
     {
         translate([
-            OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS - BOTTOM_ROUNDING_RADIUS_X,
-            -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON) / 2, -BASE_HEIGHT -
-            _EPSILON
-        ])
-            cube([
-                BOTTOM_ROUNDING_RADIUS_X + _EPSILON, OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
-                BOTTOM_ROUNDING_RADIUS_Z +
-                _EPSILON
-            ]);
-
+            LARGE_VALUE / 2 + OUTER_SHELL_INNER_WIDTH / 2 - BOTTOM_ROUNDING_RADIUS_X, 0,
+            -LARGE_VALUE / 2 - BASE_HEIGHT +
+            BOTTOM_ROUNDING_RADIUS_Z
+        ]) cube(LARGE_VALUE, center = true);
         minkowski()
         {
             translate(
-                [ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT + OUTER_SHELL_THICKNESS ])
-                scale([
-                    1, 1,
-                    (BOTTOM_ROUNDING_RADIUS_Z - OUTER_SHELL_THICKNESS) /
-                        (BOTTOM_ROUNDING_RADIUS_X - OUTER_SHELL_THICKNESS)
-                ]) rotate([ 90, -90, 0 ])
-                    round_bevel_cylinder(OUTER_SHELL_INNER_WIDTH, BOTTOM_ROUNDING_RADIUS_X - OUTER_SHELL_THICKNESS);
+                [ OUTER_SHELL_INNER_WIDTH / 2 - BOTTOM_ROUNDING_RADIUS_X, 0, -BASE_HEIGHT + OUTER_SHELL_THICKNESS ])
+                rotate([ 90, 0, 0 ]) linear_extrude(OUTER_SHELL_INNER_WIDTH, center = true)
+                    import("./bottom_rounding_negative_v0.2.20.svg", dpi = 25.4);
             sphere(OUTER_SHELL_THICKNESS);
         }
     }
-
-    translate([ 0, 0, -LARGE_VALUE / 2 - BASE_HEIGHT ]) cube(LARGE_VALUE, center = true);
 }
 
 THUMB_DIVOT_RADIUS = 20;
