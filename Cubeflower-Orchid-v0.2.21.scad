@@ -56,6 +56,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v0.2.21
 
 - Give the lats more meshing space near the hinge.
+- Move design name and version engravings to the lids.
 
 ## v0.2.20
 
@@ -338,10 +339,10 @@ module lid_part(w, d, h, pre_angle_to_lie_flat_on_table = false)
 
 VERSION_TEXT_ENGRAVING_DEPTH = 0.25;
 
-module engraving_text(text_string, _epsilon, halign = "center")
+module engraving_text(text_string, _epsilon, valign = "center", halign = "center")
 {
     translate([ 0, 0, -VERSION_TEXT_ENGRAVING_DEPTH ]) linear_extrude(VERSION_TEXT_ENGRAVING_DEPTH + _epsilon)
-        text(text_string, size = 2, font = "Ubuntu:style=bold", valign = "center", halign = halign);
+        text(text_string, size = 4, font = "Ubuntu:style=bold", valign = valign, halign = halign);
 }
 
 BOTTOM_ROUNDING_RADIUS_X = 8;
@@ -580,13 +581,6 @@ module hinge()
 
             hinge_core();
         };
-        translate([ 0, -15, -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE - _EPSILON ])
-            rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ]) resize([ 10 - 2, 0, VERSION_TEXT_ENGRAVING_DEPTH ], auto = true)
-                engraving_text(VERSION_TEXT, 0);
-        translate([ 0, 15, -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE - _EPSILON ])
-            rotate([ 180, 0, 0 ]) rotate([ 0, 0, 90 ]) resize([ 10 - 2, 0, VERSION_TEXT_ENGRAVING_DEPTH ], auto = true)
-                engraving_text(DESIGN_VARIANT_TEXT, 0);
-
         debug_quarter_negative();
     }
 }
@@ -594,6 +588,32 @@ module hinge()
 // TODO: this value is exact, but there's probably a neater way to make this calculation come from arithmetic with
 // places.
 DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES = 3;
+
+ENGRAVING_TEXT_CORNER_OFFSET_X = 2;
+ENGRAVING_TEXT_CORNER_OFFSET_Y = 4;
+
+module engraving()
+{
+    union()
+    {
+        rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
+        {
+            translate([
+                -ENGRAVING_TEXT_CORNER_OFFSET_X, -OUTER_SHELL_OUTER_WIDTH / 2, ENGRAVING_TEXT_CORNER_OFFSET_Y -
+                BASE_HEIGHT
+            ]) rotate([ 90, 0, 0 ]) resize([ 0, 0, VERSION_TEXT_ENGRAVING_DEPTH ], auto = true)
+                engraving_text(DESIGN_VARIANT_TEXT, _EPSILON, valign = "bottom", halign = "right");
+        }
+
+        rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+        {
+            translate([
+                ENGRAVING_TEXT_CORNER_OFFSET_X, -OUTER_SHELL_OUTER_WIDTH / 2, ENGRAVING_TEXT_CORNER_OFFSET_Y -
+                BASE_HEIGHT
+            ]) rotate([ 90, 0, 0 ]) engraving_text(VERSION_TEXT, _EPSILON, valign = "bottom", halign = "left");
+        }
+    }
+}
 
 module lids()
 {
@@ -654,6 +674,9 @@ module lids()
                 DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES *
             DEFAULT_CLEARANCE
         ]) cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
+
+        engraving();
+        rotate([ 0, 0, 180 ]) engraving();
 
         debug_quarter_negative();
     }
