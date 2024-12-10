@@ -3,9 +3,7 @@ build: bun-install
 	openscad-auto ./*.scad
 
 .PHONY: setup
-setup: node_modules
-
-node_modules:
+setup: bun-install
 
 .PHONY: bun-install
 bun-install:
