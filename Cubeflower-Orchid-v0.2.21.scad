@@ -53,6 +53,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.21
+
+- Give the lats more meshing space near the hinge.
+
 ## v0.2.20
 
 - Adjust bottom rounding to avoid a very thin section.
@@ -221,7 +225,8 @@ HINGE_GEAR_OUTER_RADIUS = HINGE_THICKNESS / 2 + GEAR_MAX_RADIAL_DIVERGENCE;
 
 BASE_LATTICE_OFFSET_MESHING_EXTRA = -__SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE + DEFAULT_CLEARANCE;
 
-BASE_LATTICE_OFFSET = HINGE_THICKNESS + DEFAULT_CLEARANCE + BASE_LATTICE_OFFSET_MESHING_EXTRA;
+BASE_LATTICE_OFFSET_INNER = HINGE_THICKNESS + DEFAULT_CLEARANCE + BASE_LATTICE_OFFSET_MESHING_EXTRA;
+BASE_LATTICE_OFFSET_OUTER = BASE_LATTICE_OFFSET_INNER + DEFAULT_CLEARANCE * 2;
 BASE_LATTICE_COMPLEMENT_OFFSET = HINGE_THICKNESS;
 
 LAT_SLANT = 45;
@@ -240,7 +245,7 @@ module lat(i, mirror_scale)
                 GEAR_MAX_RADIAL_DIVERGENCE * 2 + _EPSILON + DEFAULT_CLEARANCE +
                 LARGE_VALUE
             ]);
-        translate([ BASE_LATTICE_OFFSET, 0, -HINGE_THICKNESS + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE ])
+        translate([ BASE_LATTICE_OFFSET_INNER, 0, -HINGE_THICKNESS + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE ])
             rotate([ 0, 90 - LAT_SLANT, 0 ]) translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true);
     }
 }
@@ -262,10 +267,14 @@ LATS_EACH_SIDE = 10; // TODO: computer from cube size
 module lats_bottom_slant_right()
 {
 
-    color("red")
-        translate([ BASE_LATTICE_OFFSET - 2 * DEFAULT_CLEARANCE, 0, -HINGE_THICKNESS + __SMALL_HINGE__HINGE_SHAVE ])
-            rotate([ 0, LAT_SLANT, 0 ]) translate([ LARGE_VALUE / 2, 0, -LARGE_VALUE / 2 ])
-                cube(LARGE_VALUE, center = true);
+    color("red") translate(
+        [ BASE_LATTICE_OFFSET_OUTER - 2 * DEFAULT_CLEARANCE, 0, -HINGE_THICKNESS + __SMALL_HINGE__HINGE_SHAVE ]) union()
+    {
+        rotate([ 0, LAT_SLANT, 0 ]) translate([ LARGE_VALUE / 2, 0, -LARGE_VALUE / 2 ])
+            cube(LARGE_VALUE, center = true);
+        rotate([ 0, LAT_SLANT + 45, 0 ]) translate([ LARGE_VALUE / 2, 0, -LARGE_VALUE / 2 ])
+            cube(LARGE_VALUE, center = true);
+    }
 }
 
 module right_lats()
@@ -491,7 +500,7 @@ module pre_lats_right()
             children();
             bottom_rounding_negative();
             translate([
-                -LARGE_VALUE / 2 + BASE_LATTICE_OFFSET, 0, -LARGE_VALUE / 2 - BASE_HEIGHT +
+                -LARGE_VALUE / 2 + BASE_LATTICE_OFFSET_INNER, 0, -LARGE_VALUE / 2 - BASE_HEIGHT +
                 GEAR_MAX_RADIAL_DIVERGENCE
             ]) cube(LARGE_VALUE, center = true);
         }
@@ -553,16 +562,19 @@ module hinge()
             {
                 union()
                 {
-                    translate([ BASE_LATTICE_OFFSET, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ]) cube(
-                        [ OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_OFFSET, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT ]);
+                    translate([ BASE_LATTICE_OFFSET_INNER, -OUTER_SHELL_INNER_WIDTH / 2, -BASE_HEIGHT ]) cube([
+                        OUTER_SHELL_INNER_WIDTH / 2 - BASE_LATTICE_OFFSET_INNER, OUTER_SHELL_INNER_WIDTH,
+                        BASE_HEIGHT
+                    ]);
 
                     duplicate_and_mirror([ 0, 1, 0 ]) translate([ HINGE_THICKNESS - _EPSILON, 5 + 15, -BASE_HEIGHT ])
                         cube([
-                            BASE_LATTICE_OFFSET - HINGE_THICKNESS + _EPSILON, OUTER_SHELL_INNER_WIDTH / 2 - 5 - 15,
+                            BASE_LATTICE_OFFSET_INNER - HINGE_THICKNESS + _EPSILON,
+                            OUTER_SHELL_INNER_WIDTH / 2 - 5 - 15,
                             BASE_HEIGHT
                         ]);
                     duplicate_and_mirror([ 0, 1, 0 ]) translate([ HINGE_THICKNESS, 0, -BASE_HEIGHT ])
-                        cube([ BASE_LATTICE_OFFSET - HINGE_THICKNESS + _EPSILON, 10, BASE_HEIGHT ]);
+                        cube([ BASE_LATTICE_OFFSET_INNER - HINGE_THICKNESS + _EPSILON, 10, BASE_HEIGHT ]);
                 }
             }
 
@@ -620,11 +632,11 @@ module lids()
             translate([ -LARGE_VALUE / 2, 0, 0 ]) cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
 
             translate([
-                -BASE_LATTICE_OFFSET, -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS) / 2, -BASE_HEIGHT -
+                -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS) / 2, -BASE_HEIGHT -
                 _EPSILON
-            ]) cube([ BASE_LATTICE_OFFSET * 2, OUTER_SHELL_OUTER_WIDTH, GEAR_MAX_RADIAL_DIVERGENCE + _EPSILON ]);
-            translate([ -BASE_LATTICE_OFFSET, -(OUTER_SHELL_INNER_WIDTH) / 2, -BASE_HEIGHT - _EPSILON ])
-                cube([ BASE_LATTICE_OFFSET * 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + _EPSILON ]);
+            ]) cube([ BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_OUTER_WIDTH, GEAR_MAX_RADIAL_DIVERGENCE + _EPSILON ]);
+            translate([ -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH) / 2, -BASE_HEIGHT - _EPSILON ])
+                cube([ BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + _EPSILON ]);
 
             translate([ 0, 0, -HINGE_THICKNESS ]) rotate([ 90, 0, 0 ])
                 round_bevel_complement(height = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
