@@ -821,14 +821,6 @@ module unsnapper_right()
     }
 }
 
-if (SEPARATE_INNER_STAND_FOR_PRINTING)
-{
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
-    {
-        translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
-    }
-}
-
 rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
 {
     if (DEBUG)
@@ -843,17 +835,6 @@ rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
     color("#ff2200") hinge_connectors();
     color("#ff8844") hinge();
     color("#5588ff") lids();
-}
-
-if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
-{
-    color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
-        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
-    {
-        render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
-            linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
-                import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
-    }
 }
 
 GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
@@ -888,5 +869,24 @@ if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
 
         translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
             text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+    }
+}
+
+if (SEPARATE_INNER_STAND_FOR_PRINTING)
+{
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+    {
+        translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
+    }
+}
+
+if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
+{
+    color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
+        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
+    {
+        render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
+            linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
+                import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
     }
 }
