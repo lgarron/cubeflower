@@ -777,8 +777,11 @@ module lids()
                     translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
                         rotate([ 0, 0, 180 ]) snap_connector_negative();
 
-                duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
-                    unsnapper_finger_indentations_right();
+                if (INCLUDE_UNSNAPPERS)
+                {
+                    duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+                        unsnapper_finger_indentations_right();
+                }
             }
 
             translate([
@@ -809,7 +812,10 @@ module lids()
                 translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
                     rotate([ 0, 0, 180 ]) snap_connector();
 
-            duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) unsnapper_right();
+            if (INCLUDE_UNSNAPPERS)
+            {
+                duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) unsnapper_right();
+            }
         }
     }
 }
