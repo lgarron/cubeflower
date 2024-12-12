@@ -60,6 +60,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 - Redesign the unsnappers into a flowerier shape.
 - Change to a single snpa connector on top.
+- Change the lat slant to 22.5° to try to improve meshing.
 
 ## v0.2.21
 
@@ -239,7 +240,7 @@ BASE_LATTICE_OFFSET_INNER = HINGE_THICKNESS + DEFAULT_CLEARANCE + BASE_LATTICE_O
 BASE_LATTICE_OFFSET_OUTER = BASE_LATTICE_OFFSET_INNER + DEFAULT_CLEARANCE * 2;
 BASE_LATTICE_COMPLEMENT_OFFSET = HINGE_THICKNESS;
 
-LAT_SLANT = 45;
+LAT_SLANT = 22.5;
 
 module lat(i, mirror_scale)
 {
