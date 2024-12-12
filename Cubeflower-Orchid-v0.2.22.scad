@@ -632,7 +632,7 @@ LID_LOWER_CURVE_W_H = [ OUTER_SHELL_INNER_WIDTH / 2, INNER_STAND_LIP_HEIGHT ];
 /********/
 
 SNAP_CONNECTOR_RADIUS = 2.5;
-SNAP_CONNECTOR_ANGLE = 30;
+SNAP_CONNECTOR_ANGLE = 20;
 
 assert(SNAP_CONNECTOR_ANGLE <= 45); // The code below assumes this, in order to avoid creating shapes unbounded in size.
 
@@ -641,6 +641,7 @@ TH = SNAP_CONNECTOR_ANGLE;
 ROUNDING_Y = 1 / cos(TH) * (-r - 2 * r * pow(cos(TH), 2) + r * sin(TH) - 2 * r * pow(sin(TH), 2));
 
 LID_TOP_INNER_ELEVATION = get_lid_radius(LID_UPPER_CURVE_W_H) - HINGE_THICKNESS / 2;
+SIDE_SNAP_CONNECTOR_ELEVATION = LID_TOP_INNER_ELEVATION - 15;
 
 SNAP_CONNECTOR_NEGATIVE_CURVE_COMPENSATION_THICKNESS = 5; // Way too much, but gets the job done.
 
@@ -648,7 +649,7 @@ module snap_connector()
 {
     render() mirror([ 1, 0, 0 ]) difference()
     {
-        translate([ 0, 0, LID_TOP_INNER_ELEVATION ]) union()
+        union()
         {
             translate([ 0, -DEFAULT_CLEARANCE / 2 / cos(TH), 0 ]) union()
             {
@@ -755,12 +756,24 @@ module lids()
                     ]) sphere(THUMB_DIVOT_RADIUS, $fn = THUMB_DIVOTS_FN);
                 }
             }
-            rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, 15, 0 ])
-                snap_connector_negative();
-            rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, 15, 0 ])
-                rotate([ 0, 0, 180 ]) snap_connector_negative();
-            duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
-                unsnapper_finger_indentation_right();
+
+            render() union()
+            {
+                rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+                    translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) snap_connector_negative();
+                rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+                    translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) rotate([ 0, 0, 180 ]) snap_connector_negative();
+
+                duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+                    translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
+                        snap_connector_negative();
+                duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
+                    translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
+                        rotate([ 0, 0, 180 ]) snap_connector_negative();
+
+                duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+                    unsnapper_finger_indentation_right();
+            }
 
             translate([
                 0, 0,
@@ -775,12 +788,23 @@ module lids()
             debug_quarter_negative();
         }
 
-        // TODO: round snap connector plug with the lid?
-        rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, 15, 0 ])
-            snap_connector();
-        rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, 15, 0 ])
-            rotate([ 0, 0, 180 ]) snap_connector();
-        duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) unsnapper_right();
+        render() union()
+        {
+            // TODO: round snap connector plug with the lid?
+            rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+                translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) snap_connector();
+            rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+                translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) rotate([ 0, 0, 180 ]) snap_connector();
+
+            duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+                translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
+                    snap_connector();
+            duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
+                translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
+                    rotate([ 0, 0, 180 ]) snap_connector();
+
+            duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) unsnapper_right();
+        }
     }
 }
 
