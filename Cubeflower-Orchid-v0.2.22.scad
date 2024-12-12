@@ -55,6 +55,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v.2.22
+
+- Redesign the unsnappers into a flowerier shape.
+
 ## v0.2.21
 
 - Give the lats more meshing space near the hinge.
@@ -712,7 +716,7 @@ module lids()
                             {
                                 // lid_part(CUBE_EDGE_LENGTH / 2, CUBE_EDGE_LENGTH,
                                 // CUBE_EDGE_LENGTH);
-                                lid_part(LID_UPPER_CURVE_W_H, CUBE_EDGE_LENGTH, pre_angle_to_lie_flat_on_table = true);
+                                lid_part_upper();
                                 lid_part(LID_LOWER_CURVE_W_H, CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2);
 
                                 translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ])
@@ -808,40 +812,38 @@ module lids()
     }
 }
 
-UNSNAPPER_BUMP_SCALE = 7;
-UNSNAPPER_BUMP_X_STRETCH_FACTOR = 4;
-UNSNAPPER_BUMP_Y_STRETCH_FACTOR = 1.5;
-UNSNAPPER_HEIGHT = 3;
-UNSNAPPER_SHAVE_ANGLE = 2;
-UNSNAPPER_OFFSET_Y = 1 * UNSNAPPER_BUMP_SCALE;
+module lid_part_upper()
+{
+    lid_part(LID_UPPER_CURVE_W_H, CUBE_EDGE_LENGTH, pre_angle_to_lie_flat_on_table = true);
+}
 
-UNSNAPPER_CURVE_COMPENSATION_DESCENT_Z = 5;
-UNSNAPPER_CURVE_COMPENSATION_ANGLE = 4;
+module petal_inner()
+{
 
-UNSNAPPER_FINGER_OUTER_INDENTATION_ENGRAVING_OFFSET_Z = -0.75;
-UNSNAPPER_FINGER_INNER_INDENTATION_ENGRAVING_OFFSET = OUTER_SHELL_THICKNESS + 0.5;
-UNSNAPPER_FINGER_INNER_INDENTATION_ANGLE = 20;
+    translate([ 10.62, 0, LID_TOP_INNER_ELEVATION - UNSNAPPER_DESCENDER_COMPENSATION_Z ]) scale([ 1.1, 1.2, 1 ])
+        cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z, r = 10);
+}
 
 module unsnapper_finger_indentations_right()
 {
-    translate([
-        4.25 * UNSNAPPER_BUMP_SCALE, -UNSNAPPER_OFFSET_Y, LID_TOP_INNER_ELEVATION - _EPSILON +
-        UNSNAPPER_FINGER_OUTER_INDENTATION_ENGRAVING_OFFSET_Z
-    ]) scale([ 1, UNSNAPPER_BUMP_Y_STRETCH_FACTOR, 1 ])
-        cylinder(h = UNSNAPPER_HEIGHT + OUTER_SHELL_THICKNESS + 2 * _EPSILON, r = UNSNAPPER_BUMP_SCALE);
-
     intersection()
     {
-        translate([ UNSNAPPER_BUMP_SCALE * UNSNAPPER_BUMP_X_STRETCH_FACTOR / 2, -UNSNAPPER_OFFSET_Y, 0 ])
-            scale([ 1, UNSNAPPER_BUMP_Y_STRETCH_FACTOR, 1 ]) cylinder(h = LARGE_VALUE, r = UNSNAPPER_BUMP_SCALE);
+        petal_inner();
+        translate([ 5.82, 0, 0 ]) rotate([ 0, 20, 0 ]) translate([ 0, 0, LARGE_VALUE / 2 + LID_TOP_INNER_ELEVATION ])
+            cube(LARGE_VALUE, center = true);
+    }
+}
 
-#rotate([ 0, UNSNAPPER_FINGER_INNER_INDENTATION_ANGLE, 0 ]) translate([
-            1 * UNSNAPPER_BUMP_SCALE, -UNSNAPPER_OFFSET_Y, LID_TOP_INNER_ELEVATION +
-            UNSNAPPER_FINGER_INNER_INDENTATION_ENGRAVING_OFFSET
-        ])
-            translate(
-                [ -LARGE_VALUE / 2 + UNSNAPPER_BUMP_SCALE * UNSNAPPER_BUMP_X_STRETCH_FACTOR / 2, 0, LARGE_VALUE / 2 ])
-                cube(LARGE_VALUE, center = true);
+UNSNAPPER_DESCENDER_COMPENSATION_Z = 10;
+
+module petal()
+{
+    difference()
+    {
+        translate([ 15, 0, LID_TOP_INNER_ELEVATION - UNSNAPPER_DESCENDER_COMPENSATION_Z ])
+            cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z, r = 10);
+
+        petal_inner();
     }
 }
 
@@ -849,18 +851,14 @@ module unsnapper_right()
 {
     difference()
     {
-        translate([ 0, -UNSNAPPER_OFFSET_Y, LID_TOP_INNER_ELEVATION - UNSNAPPER_CURVE_COMPENSATION_DESCENT_Z ])
-            scale([ UNSNAPPER_BUMP_X_STRETCH_FACTOR, UNSNAPPER_BUMP_Y_STRETCH_FACTOR, 1 ])
-                cylinder(h = UNSNAPPER_HEIGHT + OUTER_SHELL_THICKNESS + UNSNAPPER_CURVE_COMPENSATION_DESCENT_Z,
-                         r = UNSNAPPER_BUMP_SCALE);
-        translate([ -LARGE_VALUE / 2 + UNSNAPPER_BUMP_SCALE * UNSNAPPER_BUMP_X_STRETCH_FACTOR / 2, 0, 0 ])
-            cube(LARGE_VALUE, center = true);
-        translate([ 0, 0, LID_TOP_INNER_ELEVATION + OUTER_SHELL_THICKNESS ]) rotate([ 0, -UNSNAPPER_SHAVE_ANGLE, 0 ])
-            translate([ 0, 0, LARGE_VALUE / 2 ]) cube(LARGE_VALUE, center = true);
-        translate([ 0, 0, LID_TOP_INNER_ELEVATION + OUTER_SHELL_THICKNESS / 2 ])
-            rotate([ 0, UNSNAPPER_CURVE_COMPENSATION_ANGLE, 0 ]) translate([ 0, 0, -LARGE_VALUE / 2 ])
-                cube(LARGE_VALUE, center = true);
-        unsnapper_finger_indentations_right();
+        union()
+        {
+            petal();
+            rotate([ 0, 0, 60 ]) petal();
+            rotate([ 0, 0, -60 ]) petal();
+        }
+
+        lid_part_upper();
     }
 }
 
