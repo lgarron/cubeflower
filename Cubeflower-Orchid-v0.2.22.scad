@@ -18,6 +18,7 @@ INCLUDE_SOLID_INFILL_SHAPE = !DEBUG;
 INCLUDE_SUPPORT_BLOCKER_SHAPE = !DEBUG && PRINT_IN_PLACE;
 SET_ON_SIDE_FOR_PRINTING = !DEBUG && PRINT_IN_PLACE;
 SEPARATE_INNER_STAND_FOR_PRINTING = !DEBUG && !PRINT_IN_PLACE;
+INCLUDE_UNSNAPPERS = true;
 
 FORCE_INCLUDE_STAND_PLUGS = DEBUG;
 
@@ -58,6 +59,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v.2.22
 
 - Redesign the unsnappers into a flowerier shape.
+- Change to a single snpa connector on top.
 
 ## v0.2.21
 
@@ -763,10 +765,10 @@ module lids()
 
             render() union()
             {
-                rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
-                    translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) snap_connector_negative();
-                rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
-                    translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) rotate([ 0, 0, 180 ]) snap_connector_negative();
+                rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate([ 0, 0, LID_TOP_INNER_ELEVATION ])
+                    snap_connector_negative();
+                rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) rotate([ 0, 0, 180 ])
+                    translate([ 0, 0, LID_TOP_INNER_ELEVATION ]) snap_connector_negative();
 
                 duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
                     translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
@@ -795,10 +797,10 @@ module lids()
         render() union()
         {
             // TODO: round snap connector plug with the lid?
-            rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
-                translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) snap_connector();
-            rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
-                translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) rotate([ 0, 0, 180 ]) snap_connector();
+            rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate([ 0, 0, LID_TOP_INNER_ELEVATION ]) snap_connector();
+
+            rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) rotate([ 0, 0, 180 ])
+                translate([ 0, 0, LID_TOP_INNER_ELEVATION ]) snap_connector();
 
             duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
                 translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
