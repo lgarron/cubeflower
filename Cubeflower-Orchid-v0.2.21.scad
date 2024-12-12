@@ -57,6 +57,8 @@ include <./node_modules/scad/small_hinge.scad>
 
 - Give the lats more meshing space near the hinge.
 - Move design name and version engravings to the lids.
+- TODO: snap connector
+- smooth lats
 
 ## v0.2.20
 
@@ -682,72 +684,127 @@ module lids()
     }
 }
 
-if (SEPARATE_INNER_STAND_FOR_PRINTING)
+// if (SEPARATE_INNER_STAND_FOR_PRINTING)
+// {
+//     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+//     {
+//         translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
+//     }
+// }
+
+// rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+// {
+//     if (DEBUG)
+//     {
+//         % main_cube_on_stand();
+//     }
+//     if (!SEPARATE_INNER_STAND_FOR_PRINTING)
+//     {
+
+//         inner_stand();
+//     }
+//     color("#ff2200") hinge_connectors();
+//     color("#ff8844") hinge();
+//     color("#5588ff") lids();
+// }
+
+// if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
+// {
+//     color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
+//         rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
+//     {
+//         render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
+//             linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
+//                 import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
+//     }
+// }
+
+// GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
+
+// if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
+// {
+//     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("blue") union()
+//     {
+//         hinge_core();
+//         translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+//             text("SOLID INFILL", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+//         hinge_connectors();
+//     }
+// }
+
+// if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
+// {
+//     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("red") union()
+//     {
+//         // Gears
+//         translate([ 0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA ]) cube(
+//             [
+//                 HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
+//                 HINGE_THICKNESS + 2 *
+//                 GEAR_SUPPORT_BLOCKER_EXTRA
+//             ],
+//             center = true);
+//         // Engraving
+//         translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON ]) cube(
+//             [ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE
+//             ], center = true);
+
+//         translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+//             text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+//     }
+// }
+
+SNAP_CONNECTOR_RADIUS = 2.5;
+SNAP_CONNECTOR_ANGLE = 30;
+
+assert(SNAP_CONNECTOR_ANGLE <= 45); // The code below assumes this, in order to avoid creating shapes unbounded in size.
+
+r = SNAP_CONNECTOR_RADIUS;
+TH = SNAP_CONNECTOR_ANGLE;
+ROUNDING_Y = 1 / cos(TH) * (-r - 2 * r * pow(cos(TH), 2) + r * sin(TH) - 2 * r * pow(sin(TH), 2));
+
+SNAP_CONNECTOR_ELEVATION = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH + 10;
+module snap_connector()
 {
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+    // duplicate_and_rotate([ 0, 0, 180 ])
+    union()
     {
-        translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
+        translate([ 0, -DEFAULT_CLEARANCE / 2 / cos(TH), 0 ]) union()
+        {
+            rotate([ 0, 0, SNAP_CONNECTOR_ANGLE - 90 ])
+            {
+                translate([ SNAP_CONNECTOR_RADIUS, 0, 0 ])
+                    cylinder(h = OUTER_SHELL_THICKNESS, r = SNAP_CONNECTOR_RADIUS);
+                mirror([ 0, 1, 0 ])
+                    cube([ SNAP_CONNECTOR_RADIUS * 2, SNAP_CONNECTOR_RADIUS * 2, OUTER_SHELL_THICKNESS ]);
+            }
+
+            difference()
+            {
+                translate([ r, ROUNDING_Y, 0 ]) rotate([ 0, 0, 90 + SNAP_CONNECTOR_ANGLE ])
+                    cube([ r, r, OUTER_SHELL_THICKNESS ]);
+                translate([ SNAP_CONNECTOR_RADIUS, ROUNDING_Y, -_EPSILON ])
+                    cylinder(h = OUTER_SHELL_THICKNESS + 2 * _EPSILON, r = SNAP_CONNECTOR_RADIUS);
+                translate([ r, ROUNDING_Y, -_EPSILON ]) rotate([ 0, 0, 90 ]) mirror([ 1, 0, 0 ])
+                    cube([ 2 * r, 2 * r, OUTER_SHELL_THICKNESS + 2 * _EPSILON ]);
+            }
+        }
     }
 }
 
-rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+// translate([ 0, 0, SNAP_CONNECTOR_ELEVATION ])
+duplicate_and_rotate([ 0, 0, 180 ]) translate([ -5, 0, 0 ]) union()
 {
-    if (DEBUG)
+    difference()
     {
-        % main_cube_on_stand();
+        translate([ -10, -10, 0 ]) cube([ 10, 20, OUTER_SHELL_THICKNESS ]);
+        minkowski()
+        {
+            translate([ 0, 0, -_EPSILON ]) rotate([ 0, 0, 180 ])
+                scale([ 1, 1, (OUTER_SHELL_THICKNESS + 2 * _EPSILON) / OUTER_SHELL_THICKNESS ]) snap_connector();
+            cylinder(h = OUTER_SHELL_THICKNESS / 2, r = DEFAULT_CLEARANCE / 2);
+        }
     }
-    if (!SEPARATE_INNER_STAND_FOR_PRINTING)
-    {
 
-        inner_stand();
-    }
-    color("#ff2200") hinge_connectors();
-    color("#ff8844") hinge();
-    color("#5588ff") lids();
-}
-
-if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
-{
-    color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
-        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
-    {
-        render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
-            linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
-                import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
-    }
-}
-
-GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
-
-if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
-{
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("blue") union()
-    {
-        hinge_core();
-        translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
-            text("SOLID INFILL", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
-        hinge_connectors();
-    }
-}
-
-if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
-{
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("red") union()
-    {
-        // Gears
-        translate([ 0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA ]) cube(
-            [
-                HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
-                HINGE_THICKNESS + 2 *
-                GEAR_SUPPORT_BLOCKER_EXTRA
-            ],
-            center = true);
-        // Engraving
-        translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON ]) cube(
-            [ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE ],
-            center = true);
-
-        translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
-            text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
-    }
+    snap_connector();
 }
