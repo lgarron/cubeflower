@@ -772,7 +772,7 @@ module lids()
                         rotate([ 0, 0, 180 ]) snap_connector_negative();
 
                 duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
-                    unsnapper_finger_indentation_right();
+                    unsnapper_finger_indentations_right();
             }
 
             translate([
@@ -808,40 +808,59 @@ module lids()
     }
 }
 
-UNSNAPPER_BUMP_RADIUS = 7;
+UNSNAPPER_BUMP_SCALE = 7;
 UNSNAPPER_BUMP_X_STRETCH_FACTOR = 4;
+UNSNAPPER_BUMP_Y_STRETCH_FACTOR = 1.5;
 UNSNAPPER_HEIGHT = 3;
 UNSNAPPER_SHAVE_ANGLE = 2;
-UNSNAPPER_OFFSET_Z = 1 * UNSNAPPER_BUMP_RADIUS;
+UNSNAPPER_OFFSET_Y = 1 * UNSNAPPER_BUMP_SCALE;
 
-UNSNAPPER_CURVE_COMPENSATION_DESCENT_Z = 0.5;
+UNSNAPPER_CURVE_COMPENSATION_DESCENT_Z = 5;
 UNSNAPPER_CURVE_COMPENSATION_ANGLE = 4;
 
-UNSNAPPER_FINGER_INDENTATION_ENGRAVING_OFFSET = 0.75;
+UNSNAPPER_FINGER_OUTER_INDENTATION_ENGRAVING_OFFSET_Z = -0.75;
+UNSNAPPER_FINGER_INNER_INDENTATION_ENGRAVING_OFFSET = OUTER_SHELL_THICKNESS + 0.5;
+UNSNAPPER_FINGER_INNER_INDENTATION_ANGLE = 20;
 
-module unsnapper_finger_indentation_right()
+module unsnapper_finger_indentations_right()
 {
     translate([
-        3.5 * UNSNAPPER_BUMP_RADIUS, -UNSNAPPER_OFFSET_Z, LID_TOP_INNER_ELEVATION - _EPSILON -
-        UNSNAPPER_FINGER_INDENTATION_ENGRAVING_OFFSET
-    ]) cylinder(h = UNSNAPPER_HEIGHT + OUTER_SHELL_THICKNESS + 2 * _EPSILON, r = UNSNAPPER_BUMP_RADIUS);
+        4.25 * UNSNAPPER_BUMP_SCALE, -UNSNAPPER_OFFSET_Y, LID_TOP_INNER_ELEVATION - _EPSILON +
+        UNSNAPPER_FINGER_OUTER_INDENTATION_ENGRAVING_OFFSET_Z
+    ]) scale([ 1, UNSNAPPER_BUMP_Y_STRETCH_FACTOR, 1 ])
+        cylinder(h = UNSNAPPER_HEIGHT + OUTER_SHELL_THICKNESS + 2 * _EPSILON, r = UNSNAPPER_BUMP_SCALE);
+
+    intersection()
+    {
+        translate([ UNSNAPPER_BUMP_SCALE * UNSNAPPER_BUMP_X_STRETCH_FACTOR / 2, -UNSNAPPER_OFFSET_Y, 0 ])
+            scale([ 1, UNSNAPPER_BUMP_Y_STRETCH_FACTOR, 1 ]) cylinder(h = LARGE_VALUE, r = UNSNAPPER_BUMP_SCALE);
+
+#rotate([ 0, UNSNAPPER_FINGER_INNER_INDENTATION_ANGLE, 0 ]) translate([
+            1 * UNSNAPPER_BUMP_SCALE, -UNSNAPPER_OFFSET_Y, LID_TOP_INNER_ELEVATION +
+            UNSNAPPER_FINGER_INNER_INDENTATION_ENGRAVING_OFFSET
+        ])
+            translate(
+                [ -LARGE_VALUE / 2 + UNSNAPPER_BUMP_SCALE * UNSNAPPER_BUMP_X_STRETCH_FACTOR / 2, 0, LARGE_VALUE / 2 ])
+                cube(LARGE_VALUE, center = true);
+    }
 }
 
 module unsnapper_right()
 {
     difference()
     {
-        translate([ 0, -UNSNAPPER_OFFSET_Z, LID_TOP_INNER_ELEVATION - UNSNAPPER_CURVE_COMPENSATION_DESCENT_Z ])
-            scale([ UNSNAPPER_BUMP_X_STRETCH_FACTOR, 1, 1 ])
+        translate([ 0, -UNSNAPPER_OFFSET_Y, LID_TOP_INNER_ELEVATION - UNSNAPPER_CURVE_COMPENSATION_DESCENT_Z ])
+            scale([ UNSNAPPER_BUMP_X_STRETCH_FACTOR, UNSNAPPER_BUMP_Y_STRETCH_FACTOR, 1 ])
                 cylinder(h = UNSNAPPER_HEIGHT + OUTER_SHELL_THICKNESS + UNSNAPPER_CURVE_COMPENSATION_DESCENT_Z,
-                         r = UNSNAPPER_BUMP_RADIUS);
-        translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true);
+                         r = UNSNAPPER_BUMP_SCALE);
+        translate([ -LARGE_VALUE / 2 + UNSNAPPER_BUMP_SCALE * UNSNAPPER_BUMP_X_STRETCH_FACTOR / 2, 0, 0 ])
+            cube(LARGE_VALUE, center = true);
         translate([ 0, 0, LID_TOP_INNER_ELEVATION + OUTER_SHELL_THICKNESS ]) rotate([ 0, -UNSNAPPER_SHAVE_ANGLE, 0 ])
             translate([ 0, 0, LARGE_VALUE / 2 ]) cube(LARGE_VALUE, center = true);
         translate([ 0, 0, LID_TOP_INNER_ELEVATION + OUTER_SHELL_THICKNESS / 2 ])
             rotate([ 0, UNSNAPPER_CURVE_COMPENSATION_ANGLE, 0 ]) translate([ 0, 0, -LARGE_VALUE / 2 ])
                 cube(LARGE_VALUE, center = true);
-        unsnapper_finger_indentation_right();
+        unsnapper_finger_indentations_right();
     }
 }
 
