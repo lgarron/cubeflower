@@ -22,8 +22,10 @@ SEPARATE_INNER_STAND_FOR_PRINTING = !DEBUG && !PRINT_IN_PLACE;
 FORCE_INCLUDE_STAND_PLUGS = DEBUG;
 
 $fn = DEBUG ? 64 : 90;
-LID_TOP_FN = DEBUG ? 64 : 360;
+LID_UPPER_CURVE_FN = DEBUG ? 64 : 360;
 THUMB_DIVOTS_FN = DEBUG ? 64 : 360;
+
+assert(OPENING_ANGLE_EACH_SIDE >= 4);
 
 /********/
 
@@ -57,8 +59,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 - Give the lats more meshing space near the hinge.
 - Move design name and version engravings to the lids.
-- TODO: snap connector
-- smooth lats
+- Add snap connectors to the top of the lid.
 
 ## v0.2.20
 
@@ -313,12 +314,18 @@ module debug_quarter_negative()
     }
 }
 
-module lid_part(w, d, h, pre_angle_to_lie_flat_on_table = false)
-{
+function get_lid_radius_w(w_h) = w_h[0] - HINGE_THICKNESS / 2;
+function get_lid_radius_h(w_h) = w_h[1] + INNER_STAND_FLOOR_ELEVATION + HINGE_THICKNESS / 2;
+function get_lid_radius(w_h) = sqrt(pow(get_lid_radius_w(w_h), 2) + pow(get_lid_radius_h(w_h), 2));
 
-    lid_radius_w = w - HINGE_THICKNESS / 2;
-    lid_radius_h = h + INNER_STAND_FLOOR_ELEVATION + HINGE_THICKNESS / 2;
-    lid_radius = sqrt(pow(lid_radius_w, 2) + pow(lid_radius_h, 2));
+module lid_part(w_h, d, pre_angle_to_lie_flat_on_table = false)
+{
+    w = w_h[0];
+    h = w_h[1];
+
+    lid_radius_w = get_lid_radius_w(w_h);
+    lid_radius_h = get_lid_radius_h(w_h);
+    lid_radius = get_lid_radius(w_h);
 
     difference()
     {
@@ -326,7 +333,7 @@ module lid_part(w, d, h, pre_angle_to_lie_flat_on_table = false)
         {
             rotate_for_lid_right(angle = pre_angle_to_lie_flat_on_table ? LID_OVEROPENED_FLAT_ANGLE : 0)
                 translate([ HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) rotate([ 90, 0, 0 ])
-                    cylinder(h = d, r = lid_radius, center = true, $fn = LID_TOP_FN);
+                    cylinder(h = d, r = lid_radius, center = true, $fn = LID_UPPER_CURVE_FN);
             translate([ LARGE_VALUE / 2 + w, 0, 0 ]) cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
         }
         translate([ -LARGE_VALUE / 2 + HINGE_THICKNESS / 2, 0, 0 ])
@@ -617,142 +624,12 @@ module engraving()
     }
 }
 
-module lids()
-{
+/********/
 
-    difference()
-    {
+LID_UPPER_CURVE_W_H = [ OUTER_SHELL_INNER_WIDTH / 2, CUBE_EDGE_LENGTH ];
+LID_LOWER_CURVE_W_H = [ OUTER_SHELL_INNER_WIDTH / 2, INNER_STAND_LIP_HEIGHT ];
 
-        render() duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference() difference()
-        {
-            union()
-            {
-                render() minkowski_shell()
-                {
-                    union()
-                    {
-                        // lid_part(CUBE_EDGE_LENGTH / 2, CUBE_EDGE_LENGTH,
-                        // CUBE_EDGE_LENGTH);
-                        lid_part(OUTER_SHELL_INNER_WIDTH / 2, CUBE_EDGE_LENGTH, CUBE_EDGE_LENGTH,
-                                 pre_angle_to_lie_flat_on_table = true);
-                        lid_part(OUTER_SHELL_INNER_WIDTH / 2, CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2,
-                                 INNER_STAND_LIP_HEIGHT);
-
-                        translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ]) cube([
-                            OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT +
-                            INNER_STAND_FLOOR_ELEVATION
-                        ]);
-                    }
-
-                    sphere(OUTER_SHELL_THICKNESS);
-                }
-
-                translate([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, 0 ]) rotate([ 90, -90, 0 ])
-                    round_bevel_complement(OUTER_SHELL_INNER_WIDTH, INNER_STAND_LIP_THICKNESS);
-            }
-
-            translate([ -LARGE_VALUE / 2, 0, 0 ]) cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
-
-            translate([
-                -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS) / 2, -BASE_HEIGHT -
-                _EPSILON
-            ]) cube([ BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_OUTER_WIDTH, GEAR_MAX_RADIAL_DIVERGENCE + _EPSILON ]);
-            translate([ -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH) / 2, -BASE_HEIGHT - _EPSILON ])
-                cube([ BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + _EPSILON ]);
-
-            translate([ 0, 0, -HINGE_THICKNESS ]) rotate([ 90, 0, 0 ])
-                round_bevel_complement(height = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
-                                       radius = HINGE_THICKNESS / 2, center_z = true);
-
-            duplicate_and_mirror([ 0, 1, 0 ]) translate([
-                THUMB_DIVOT_X, -CUBE_EDGE_LENGTH / 2 - OUTER_SHELL_THICKNESS - THUMB_DIVOT_RADIUS + THUMB_DIVOT_DEPTH,
-                THUMB_DIVOT_Y
-            ]) sphere(THUMB_DIVOT_RADIUS, $fn = THUMB_DIVOTS_FN);
-        }
-
-        translate([
-            0, 0,
-            LARGE_VALUE / 2 - BASE_LATTICE_COMPLEMENT_OFFSET -
-                DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES *
-            DEFAULT_CLEARANCE
-        ]) cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
-
-        engraving();
-        rotate([ 0, 0, 180 ]) engraving();
-
-        debug_quarter_negative();
-    }
-}
-
-// if (SEPARATE_INNER_STAND_FOR_PRINTING)
-// {
-//     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
-//     {
-//         translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
-//     }
-// }
-
-// rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
-// {
-//     if (DEBUG)
-//     {
-//         % main_cube_on_stand();
-//     }
-//     if (!SEPARATE_INNER_STAND_FOR_PRINTING)
-//     {
-
-//         inner_stand();
-//     }
-//     color("#ff2200") hinge_connectors();
-//     color("#ff8844") hinge();
-//     color("#5588ff") lids();
-// }
-
-// if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
-// {
-//     color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
-//         rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
-//     {
-//         render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
-//             linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
-//                 import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
-//     }
-// }
-
-// GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
-
-// if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
-// {
-//     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("blue") union()
-//     {
-//         hinge_core();
-//         translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
-//             text("SOLID INFILL", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
-//         hinge_connectors();
-//     }
-// }
-
-// if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
-// {
-//     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("red") union()
-//     {
-//         // Gears
-//         translate([ 0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA ]) cube(
-//             [
-//                 HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
-//                 HINGE_THICKNESS + 2 *
-//                 GEAR_SUPPORT_BLOCKER_EXTRA
-//             ],
-//             center = true);
-//         // Engraving
-//         translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON ]) cube(
-//             [ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE
-//             ], center = true);
-
-//         translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
-//             text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
-//     }
-// }
+/********/
 
 SNAP_CONNECTOR_RADIUS = 2.5;
 SNAP_CONNECTOR_ANGLE = 30;
@@ -763,48 +640,212 @@ r = SNAP_CONNECTOR_RADIUS;
 TH = SNAP_CONNECTOR_ANGLE;
 ROUNDING_Y = 1 / cos(TH) * (-r - 2 * r * pow(cos(TH), 2) + r * sin(TH) - 2 * r * pow(sin(TH), 2));
 
-SNAP_CONNECTOR_ELEVATION = INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH + 10;
+SNAP_CONNECTOR_ELEVATION = get_lid_radius(LID_UPPER_CURVE_W_H) - HINGE_THICKNESS / 2;
+
+SNAP_CONNECTOR_NEGATIVE_CURVE_COMPENSATION_THICKNESS = 5; // Way too much, but gets the job done.
+
 module snap_connector()
 {
-    // duplicate_and_rotate([ 0, 0, 180 ])
-    union()
+    render() mirror([ 1, 0, 0 ]) difference()
     {
-        translate([ 0, -DEFAULT_CLEARANCE / 2 / cos(TH), 0 ]) union()
+        translate([ 0, 0, SNAP_CONNECTOR_ELEVATION ]) union()
         {
-            rotate([ 0, 0, SNAP_CONNECTOR_ANGLE - 90 ])
+            translate([ 0, -DEFAULT_CLEARANCE / 2 / cos(TH), 0 ]) union()
             {
-                translate([ SNAP_CONNECTOR_RADIUS, 0, 0 ])
-                    cylinder(h = OUTER_SHELL_THICKNESS, r = SNAP_CONNECTOR_RADIUS);
-                mirror([ 0, 1, 0 ])
-                    cube([ SNAP_CONNECTOR_RADIUS * 2, SNAP_CONNECTOR_RADIUS * 2, OUTER_SHELL_THICKNESS ]);
-            }
+                rotate([ 0, 0, SNAP_CONNECTOR_ANGLE - 90 ])
+                {
+                    translate([ SNAP_CONNECTOR_RADIUS, 0, 0 ])
+                        cylinder(h = OUTER_SHELL_THICKNESS, r = SNAP_CONNECTOR_RADIUS);
+                    mirror([ 0, 1, 0 ])
+                        cube([ SNAP_CONNECTOR_RADIUS * 2, SNAP_CONNECTOR_RADIUS * 2, OUTER_SHELL_THICKNESS ]);
+                }
 
-            difference()
-            {
-                translate([ r, ROUNDING_Y, 0 ]) rotate([ 0, 0, 90 + SNAP_CONNECTOR_ANGLE ])
-                    cube([ r, r, OUTER_SHELL_THICKNESS ]);
-                translate([ SNAP_CONNECTOR_RADIUS, ROUNDING_Y, -_EPSILON ])
-                    cylinder(h = OUTER_SHELL_THICKNESS + 2 * _EPSILON, r = SNAP_CONNECTOR_RADIUS);
-                translate([ r, ROUNDING_Y, -_EPSILON ]) rotate([ 0, 0, 90 ]) mirror([ 1, 0, 0 ])
-                    cube([ 2 * r, 2 * r, OUTER_SHELL_THICKNESS + 2 * _EPSILON ]);
+                difference()
+                {
+                    translate([ r, ROUNDING_Y, 0 ]) rotate([ 0, 0, 90 + SNAP_CONNECTOR_ANGLE ])
+                        cube([ r, r, OUTER_SHELL_THICKNESS ]);
+                    translate([ SNAP_CONNECTOR_RADIUS, ROUNDING_Y, -_EPSILON ])
+                        cylinder(h = OUTER_SHELL_THICKNESS + 2 * _EPSILON, r = SNAP_CONNECTOR_RADIUS);
+                    translate([ r, ROUNDING_Y, -_EPSILON ]) rotate([ 0, 0, 90 ]) mirror([ 1, 0, 0 ])
+                        cube([ 2 * r, 2 * r, OUTER_SHELL_THICKNESS + 2 * _EPSILON ]);
+                }
             }
         }
+        translate([ -LARGE_VALUE / 2 - DEFAULT_CLEARANCE / 2 - _EPSILON, 0, 0 ]) cube(LARGE_VALUE, center = true);
     }
 }
 
-// translate([ 0, 0, SNAP_CONNECTOR_ELEVATION ])
-duplicate_and_rotate([ 0, 0, 180 ]) translate([ -5, 0, 0 ]) union()
+module snap_connector_negative()
 {
-    difference()
+    translate([ -DEFAULT_CLEARANCE, 0, 0 ]) difference()
     {
-        translate([ -10, -10, 0 ]) cube([ 10, 20, OUTER_SHELL_THICKNESS ]);
         minkowski()
         {
-            translate([ 0, 0, -_EPSILON ]) rotate([ 0, 0, 180 ])
-                scale([ 1, 1, (OUTER_SHELL_THICKNESS + 2 * _EPSILON) / OUTER_SHELL_THICKNESS ]) snap_connector();
-            cylinder(h = OUTER_SHELL_THICKNESS / 2, r = DEFAULT_CLEARANCE / 2);
+            rotate([ 0, 0, 180 ]) snap_connector();
+            cylinder(h = SNAP_CONNECTOR_NEGATIVE_CURVE_COMPENSATION_THICKNESS * 2, r = DEFAULT_CLEARANCE / 2,
+                     center = true);
         }
+        translate([ -LARGE_VALUE / 2 - _EPSILON, 0, 0 ]) cube(LARGE_VALUE, center = true);
     }
+}
 
-    snap_connector();
+/********/
+
+module lids()
+{
+
+    union()
+    {
+        difference()
+        {
+
+            union()
+            {
+                render() duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference() difference()
+                {
+                    union()
+                    {
+                        render() minkowski_shell()
+                        {
+                            union()
+                            {
+                                // lid_part(CUBE_EDGE_LENGTH / 2, CUBE_EDGE_LENGTH,
+                                // CUBE_EDGE_LENGTH);
+                                lid_part(LID_UPPER_CURVE_W_H, CUBE_EDGE_LENGTH, pre_angle_to_lie_flat_on_table = true);
+                                lid_part(LID_LOWER_CURVE_W_H, CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2);
+
+                                translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ])
+                                    cube([
+                                        OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT +
+                                        INNER_STAND_FLOOR_ELEVATION
+                                    ]);
+                            }
+
+                            sphere(OUTER_SHELL_THICKNESS);
+                        }
+
+                        translate([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, 0 ])
+                            rotate([ 90, -90, 0 ])
+                                round_bevel_complement(OUTER_SHELL_INNER_WIDTH, INNER_STAND_LIP_THICKNESS);
+                    }
+
+                    translate([ -LARGE_VALUE / 2, 0, 0 ])
+                        cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
+
+                    translate([
+                        -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS) / 2,
+                        -BASE_HEIGHT -
+                        _EPSILON
+                    ])
+                        cube([
+                            BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_OUTER_WIDTH, GEAR_MAX_RADIAL_DIVERGENCE +
+                            _EPSILON
+                        ]);
+                    translate([ -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH) / 2, -BASE_HEIGHT - _EPSILON ])
+                        cube([ BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + _EPSILON ]);
+
+                    translate([ 0, 0, -HINGE_THICKNESS ]) rotate([ 90, 0, 0 ]) round_bevel_complement(
+                        height = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
+                        radius = HINGE_THICKNESS / 2, center_z = true);
+
+                    duplicate_and_mirror([ 0, 1, 0 ]) translate([
+                        THUMB_DIVOT_X,
+                        -CUBE_EDGE_LENGTH / 2 - OUTER_SHELL_THICKNESS - THUMB_DIVOT_RADIUS + THUMB_DIVOT_DEPTH,
+                        THUMB_DIVOT_Y
+                    ]) sphere(THUMB_DIVOT_RADIUS, $fn = THUMB_DIVOTS_FN);
+                }
+            }
+            rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, 15, 0 ])
+                snap_connector_negative();
+            rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, 15, 0 ])
+                rotate([ 0, 0, 180 ]) snap_connector_negative();
+
+            translate([
+                0, 0,
+                LARGE_VALUE / 2 - BASE_LATTICE_COMPLEMENT_OFFSET -
+                    DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES *
+                DEFAULT_CLEARANCE
+            ]) cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
+
+            engraving();
+            rotate([ 0, 0, 180 ]) engraving();
+
+            debug_quarter_negative();
+        }
+
+        rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, 15, 0 ])
+            snap_connector();
+        rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, 15, 0 ])
+            rotate([ 0, 0, 180 ]) snap_connector();
+    }
+}
+
+if (SEPARATE_INNER_STAND_FOR_PRINTING)
+{
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+    {
+        translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
+    }
+}
+
+rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+{
+    if (DEBUG)
+    {
+        % main_cube_on_stand();
+    }
+    if (!SEPARATE_INNER_STAND_FOR_PRINTING)
+    {
+
+        inner_stand();
+    }
+    color("#ff2200") hinge_connectors();
+    color("#ff8844") hinge();
+    color("#5588ff") lids();
+}
+
+if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
+{
+    color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
+        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
+    {
+        render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
+            linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
+                import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
+    }
+}
+
+GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
+
+if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
+{
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("blue") union()
+    {
+        hinge_core();
+        translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+            text("SOLID INFILL", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+        hinge_connectors();
+    }
+}
+
+if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
+{
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("red") union()
+    {
+        // Gears
+        translate([ 0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA ]) cube(
+            [
+                HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
+                HINGE_THICKNESS + 2 *
+                GEAR_SUPPORT_BLOCKER_EXTRA
+            ],
+            center = true);
+        // Engraving
+        translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON ]) cube(
+            [ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE ],
+            center = true);
+
+        translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+            text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+    }
 }
