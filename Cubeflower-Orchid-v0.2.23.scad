@@ -60,6 +60,7 @@ include <./node_modules/scad/small_hinge.scad>
 
 - Change `SNAP_CONNECTOR_ANGLE` to 30°.
 - Try a simple centered circle unsnapper.
+- Give the hinge gears a little extra rotational clearance in the inner stand.
 
 ## v0.2.22
 
@@ -466,6 +467,8 @@ module hinge_connectors(negative = false)
     }
 }
 
+INNER_STAND_HINGE_GEAR_ARCH_EXTRA_DEGREES = 5;
+
 module inner_stand()
 {
 
@@ -492,10 +495,13 @@ module inner_stand()
 
         duplicate_and_mirror() duplicate_and_mirror([ 0, 1, 0 ])
             duplicate_and_translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, 0 ])
-                translate([ HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) rotate([ -90, 0, 0 ]) difference()
+                translate([ HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ]) difference()
         {
-            cylinder(h = 10 - __SMALL_HINGE__GEAR_OFFSET_HEIGHT, r = HINGE_GEAR_OUTER_RADIUS);
-            translate([ LARGE_VALUE / 2 + DEFAULT_CLEARANCE, 0, 0 ]) cube(LARGE_VALUE, center = true);
+            rotate([ -90, 0, 0 ]) cylinder(h = 10 - __SMALL_HINGE__GEAR_OFFSET_HEIGHT, r = HINGE_GEAR_OUTER_RADIUS);
+            translate([ HINGE_THICKNESS / 2, 0, -HINGE_THICKNESS / 2 ])
+                rotate([ 0, INNER_STAND_HINGE_GEAR_ARCH_EXTRA_DEGREES, 0 ])
+                    translate([ -HINGE_THICKNESS / 2, 0, HINGE_THICKNESS / 2 ])
+                        translate([ LARGE_VALUE / 2 + DEFAULT_CLEARANCE, 0, 0 ]) cube(LARGE_VALUE, center = true);
         }
 
         if (INCLUDE_INNER_STAND_ENGRAVING)
