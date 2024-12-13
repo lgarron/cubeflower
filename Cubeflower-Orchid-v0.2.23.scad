@@ -56,7 +56,11 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
-## v.2.22
+## v0.2.23
+
+- Change `SNAP_CONNECTOR_ANGLE` to 30°.
+
+## v0.2.22
 
 - Redesign the unsnappers into a flowerier shape.
 - Change to a single snpa connector on top.
@@ -639,7 +643,7 @@ LID_LOWER_CURVE_W_H = [ OUTER_SHELL_INNER_WIDTH / 2, INNER_STAND_LIP_HEIGHT ];
 /********/
 
 SNAP_CONNECTOR_RADIUS = 2.5;
-SNAP_CONNECTOR_ANGLE = 20;
+SNAP_CONNECTOR_ANGLE = 30;
 
 assert(SNAP_CONNECTOR_ANGLE <= 45); // The code below assumes this, in order to avoid creating shapes unbounded in size.
 
