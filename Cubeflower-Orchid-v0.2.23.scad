@@ -696,7 +696,7 @@ module snap_connector()
 
 module snap_connector_negative()
 {
-    translate([ -DEFAULT_CLEARANCE, 0, 0 ]) difference()
+    render() translate([ -DEFAULT_CLEARANCE, 0, 0 ]) difference()
     {
         minkowski()
         {
