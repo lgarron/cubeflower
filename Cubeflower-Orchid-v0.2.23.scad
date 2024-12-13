@@ -61,6 +61,7 @@ include <./node_modules/scad/small_hinge.scad>
 - Change `SNAP_CONNECTOR_ANGLE` to 30°.
 - Try a simple centered circle unsnapper.
 - Give the hinge gears a little extra rotational clearance in the inner stand.
+- Give the hinge connector a little extra bottom clearance to compensate for inaccuracy from small tree supports.
 
 ## v0.2.22
 
@@ -579,6 +580,8 @@ module hinge_core()
     hinge_core_hinge(true);
 }
 
+HINGE_CONNECTOR_BOTTOM_CLEARANCE = 0.5; // To compensate for inaccuracy from small tree supports.
+
 module hinge()
 {
 
@@ -608,6 +611,15 @@ module hinge()
 
             hinge_core();
         };
+        duplicate_and_mirror([ 0, 1, 0 ]) translate([
+            -HINGE_THICKNESS + _EPSILON, 15 - 5 + __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE, -HINGE_THICKNESS + _EPSILON
+        ])
+            cube([
+                HINGE_THICKNESS * 2 - 2 * _EPSILON, 10 - 2 * __SMALL_HINGE__PLUG_VERTICAL_CLEARANCE,
+                HINGE_CONNECTOR_BOTTOM_CLEARANCE -
+                _EPSILON
+            ]);
+
         debug_quarter_negative();
     }
 }
