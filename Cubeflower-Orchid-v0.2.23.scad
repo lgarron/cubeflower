@@ -59,6 +59,7 @@ include <./node_modules/scad/small_hinge.scad>
 ## v0.2.23
 
 - Change `SNAP_CONNECTOR_ANGLE` to 30°.
+- Try a simple centered circle unsnapper.
 
 ## v0.2.22
 
@@ -825,6 +826,9 @@ module lids()
     }
 }
 
+PETAL_EXTRA_HEIGHT = 2;
+PETAL_INNER_OFFSET = 0;
+
 module lid_part_upper()
 {
     lid_part(LID_UPPER_CURVE_W_H, CUBE_EDGE_LENGTH, pre_angle_to_lie_flat_on_table = true);
@@ -833,18 +837,19 @@ module lid_part_upper()
 module petal_inner()
 {
 
-    translate([ 10.62, 0, LID_TOP_INNER_ELEVATION - UNSNAPPER_DESCENDER_COMPENSATION_Z ]) scale([ 1.1, 1.2, 1 ])
-        cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z, r = 10);
+    translate([ PETAL_INNER_OFFSET, 0, LID_TOP_INNER_ELEVATION - UNSNAPPER_DESCENDER_COMPENSATION_Z ])
+        scale([ 1, 1, 1 ])
+            cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z + PETAL_EXTRA_HEIGHT, r = 7);
 }
 
 module unsnapper_finger_indentations_right()
 {
-    intersection()
-    {
-        petal_inner();
-        translate([ 5.82, 0, 0 ]) rotate([ 0, 20, 0 ]) translate([ 0, 0, LARGE_VALUE / 2 + LID_TOP_INNER_ELEVATION ])
-            cube(LARGE_VALUE, center = true);
-    }
+    // intersection()
+    // {
+    //     petal_inner();
+    //     translate([ 5.82 + PETAL_INNER_OFFSET, 0, 0 ]) rotate([ 0, 20, 0 ])
+    //         translate([ 0, 0, LARGE_VALUE / 2 + LID_TOP_INNER_ELEVATION ]) cube(LARGE_VALUE, center = true);
+    // }
 }
 
 UNSNAPPER_DESCENDER_COMPENSATION_Z = 10;
@@ -853,8 +858,8 @@ module petal()
 {
     difference()
     {
-        translate([ 15, 0, LID_TOP_INNER_ELEVATION - UNSNAPPER_DESCENDER_COMPENSATION_Z ])
-            cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z, r = 10);
+        translate([ PETAL_INNER_OFFSET, 0, LID_TOP_INNER_ELEVATION - UNSNAPPER_DESCENDER_COMPENSATION_Z ])
+            cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z + PETAL_EXTRA_HEIGHT, r = 9);
 
         petal_inner();
     }
@@ -867,9 +872,8 @@ module unsnapper_right()
         union()
         {
             petal();
-            rotate([ 0, 0, 60 ]) petal();
-            rotate([ 0, 0, -60 ]) petal();
         }
+        translate([ -LARGE_VALUE / 2, 0, 0 ]) cube(LARGE_VALUE, center = true);
 
         lid_part_upper();
     }
