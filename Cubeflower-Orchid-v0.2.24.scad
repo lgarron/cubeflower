@@ -56,6 +56,11 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.24
+
+- Change back from one to two snap connectors on top (and make the unsnapper a bit smaller to accommodate).
+- Change side snap connectors to 20° (while keeping the top snap connectors at 30°).
+
 ## v0.2.23
 
 - Change `SNAP_CONNECTOR_ANGLE` to 30°.
@@ -662,28 +667,33 @@ LID_LOWER_CURVE_W_H = [ OUTER_SHELL_INNER_WIDTH / 2, INNER_STAND_LIP_HEIGHT ];
 /********/
 
 SNAP_CONNECTOR_RADIUS = 2.5;
-SNAP_CONNECTOR_ANGLE = 30;
+SNAP_CONNECTOR_TOP_ANGLE = 30;
+SNAP_CONNECTOR_SIDE_ANGLE = 20;
 
-assert(SNAP_CONNECTOR_ANGLE <= 45); // The code below assumes this, in order to avoid creating shapes unbounded in size.
-
-r = SNAP_CONNECTOR_RADIUS;
-TH = SNAP_CONNECTOR_ANGLE;
-ROUNDING_Y = 1 / cos(TH) * (-r - 2 * r * pow(cos(TH), 2) + r * sin(TH) - 2 * r * pow(sin(TH), 2));
+assert(SNAP_CONNECTOR_TOP_ANGLE <=
+       45); // The code below assumes this, in order to avoid creating shapes unbounded in size.
+assert(SNAP_CONNECTOR_SIDE_ANGLE <=
+       45); // The code below assumes this, in order to avoid creating shapes unbounded in size.
+;
 
 LID_TOP_INNER_ELEVATION = get_lid_radius(LID_UPPER_CURVE_W_H) - HINGE_THICKNESS / 2;
 SIDE_SNAP_CONNECTOR_ELEVATION = LID_TOP_INNER_ELEVATION - 15;
 
 SNAP_CONNECTOR_NEGATIVE_CURVE_COMPENSATION_THICKNESS = 5; // Way too much, but gets the job done.
 
-module snap_connector()
+module snap_connector(angle)
 {
+    ROUNDING_Y = 1 / cos(angle) *
+                 (-SNAP_CONNECTOR_RADIUS - 2 * SNAP_CONNECTOR_RADIUS * pow(cos(angle), 2) +
+                  SNAP_CONNECTOR_RADIUS * sin(angle) - 2 * SNAP_CONNECTOR_RADIUS * pow(sin(angle), 2));
+
     render() mirror([ 1, 0, 0 ]) difference()
     {
         union()
         {
-            translate([ 0, -DEFAULT_CLEARANCE / 2 / cos(TH), 0 ]) union()
+            translate([ 0, -DEFAULT_CLEARANCE / 2 / cos(angle), 0 ]) union()
             {
-                rotate([ 0, 0, SNAP_CONNECTOR_ANGLE - 90 ])
+                rotate([ 0, 0, angle - 90 ])
                 {
                     translate([ SNAP_CONNECTOR_RADIUS, 0, 0 ])
                         cylinder(h = OUTER_SHELL_THICKNESS, r = SNAP_CONNECTOR_RADIUS);
@@ -693,12 +703,14 @@ module snap_connector()
 
                 difference()
                 {
-                    translate([ r, ROUNDING_Y, 0 ]) rotate([ 0, 0, 90 + SNAP_CONNECTOR_ANGLE ])
-                        cube([ r, r, OUTER_SHELL_THICKNESS ]);
+                    translate([ SNAP_CONNECTOR_RADIUS, ROUNDING_Y, 0 ]) rotate([ 0, 0, 90 + angle ])
+                        cube([ SNAP_CONNECTOR_RADIUS, SNAP_CONNECTOR_RADIUS, OUTER_SHELL_THICKNESS ]);
                     translate([ SNAP_CONNECTOR_RADIUS, ROUNDING_Y, -_EPSILON ])
                         cylinder(h = OUTER_SHELL_THICKNESS + 2 * _EPSILON, r = SNAP_CONNECTOR_RADIUS);
-                    translate([ r, ROUNDING_Y, -_EPSILON ]) rotate([ 0, 0, 90 ]) mirror([ 1, 0, 0 ])
-                        cube([ 2 * r, 2 * r, OUTER_SHELL_THICKNESS + 2 * _EPSILON ]);
+                    translate([ SNAP_CONNECTOR_RADIUS, ROUNDING_Y, -_EPSILON ]) rotate([ 0, 0, 90 ]) mirror([ 1, 0, 0 ])
+                        cube([
+                            2 * SNAP_CONNECTOR_RADIUS, 2 * SNAP_CONNECTOR_RADIUS, OUTER_SHELL_THICKNESS + 2 * _EPSILON
+                        ]);
                 }
             }
         }
@@ -706,13 +718,13 @@ module snap_connector()
     }
 }
 
-module snap_connector_negative()
+module snap_connector_negative(angle)
 {
     render() translate([ -DEFAULT_CLEARANCE, 0, 0 ]) difference()
     {
         minkowski()
         {
-            rotate([ 0, 0, 180 ]) snap_connector();
+            rotate([ 0, 0, 180 ]) snap_connector(angle);
             cylinder(h = SNAP_CONNECTOR_NEGATIVE_CURVE_COMPENSATION_THICKNESS * 2, r = DEFAULT_CLEARANCE / 2,
                      center = true);
         }
@@ -789,17 +801,18 @@ module lids()
 
             render() union()
             {
-                rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate([ 0, 0, LID_TOP_INNER_ELEVATION ])
-                    snap_connector_negative();
-                rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) rotate([ 0, 0, 180 ])
-                    translate([ 0, 0, LID_TOP_INNER_ELEVATION ]) snap_connector_negative();
+                rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+                    translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) snap_connector_negative(SNAP_CONNECTOR_TOP_ANGLE);
+                rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+                    translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) rotate([ 0, 0, 180 ])
+                        snap_connector_negative(SNAP_CONNECTOR_TOP_ANGLE);
 
                 duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
                     translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
-                        snap_connector_negative();
+                        snap_connector_negative(SNAP_CONNECTOR_SIDE_ANGLE);
                 duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
                     translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
-                        rotate([ 0, 0, 180 ]) snap_connector_negative();
+                        rotate([ 0, 0, 180 ]) snap_connector_negative(SNAP_CONNECTOR_SIDE_ANGLE);
 
                 if (INCLUDE_UNSNAPPERS)
                 {
@@ -824,17 +837,18 @@ module lids()
         render() union()
         {
             // TODO: round snap connector plug with the lid?
-            rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate([ 0, 0, LID_TOP_INNER_ELEVATION ]) snap_connector();
-
-            rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) rotate([ 0, 0, 180 ])
-                translate([ 0, 0, LID_TOP_INNER_ELEVATION ]) snap_connector();
+            rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+                translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) snap_connector(SNAP_CONNECTOR_TOP_ANGLE);
+            rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+                translate([ 0, 15, LID_TOP_INNER_ELEVATION ]) rotate([ 0, 0, 180 ])
+                    snap_connector(SNAP_CONNECTOR_TOP_ANGLE);
 
             duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
                 translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
-                    snap_connector();
+                    snap_connector(SNAP_CONNECTOR_SIDE_ANGLE);
             duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
                 translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ]) rotate([ -90, 0, 0 ])
-                    rotate([ 0, 0, 180 ]) snap_connector();
+                    rotate([ 0, 0, 180 ]) snap_connector(SNAP_CONNECTOR_SIDE_ANGLE);
 
             if (INCLUDE_UNSNAPPERS)
             {
@@ -857,7 +871,7 @@ module petal_inner()
 
     translate([ PETAL_INNER_OFFSET, 0, LID_TOP_INNER_ELEVATION - UNSNAPPER_DESCENDER_COMPENSATION_Z ])
         scale([ 1, 1, 1 ])
-            cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z + PETAL_EXTRA_HEIGHT, r = 7);
+            cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z + PETAL_EXTRA_HEIGHT, r = 6);
 }
 
 module unsnapper_finger_indentations_right()
@@ -877,7 +891,7 @@ module petal()
     difference()
     {
         translate([ PETAL_INNER_OFFSET, 0, LID_TOP_INNER_ELEVATION - UNSNAPPER_DESCENDER_COMPENSATION_Z ])
-            cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z + PETAL_EXTRA_HEIGHT, r = 9);
+            cylinder(h = OUTER_SHELL_THICKNESS + UNSNAPPER_DESCENDER_COMPENSATION_Z + PETAL_EXTRA_HEIGHT, r = 8);
 
         petal_inner();
     }
