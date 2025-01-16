@@ -30,6 +30,7 @@ assert(OPENING_ANGLE_EACH_SIDE >= 4);
 
 /********/
 
+include <./node_modules/scad/compose.scad>
 include <./node_modules/scad/duplicate.scad>
 include <./node_modules/scad/minkowski_shell.scad>
 include <./node_modules/scad/round_bevel.scad>
@@ -397,6 +398,8 @@ module bottom_rounding_negative()
     }
 }
 
+SIDE_SNAP_CONNECTOR_HEIGHT = 51.5;
+
 THUMB_DIVOT_RADIUS = 20;
 THUMB_DIVOT_DEPTH = 0.75;
 THUMB_DIVOT_X = CUBE_EDGE_LENGTH / 6;
@@ -668,11 +671,8 @@ LID_LOWER_CURVE_W_H = [ OUTER_SHELL_INNER_WIDTH / 2, INNER_STAND_LIP_HEIGHT ];
 /********/
 
 SNAP_CONNECTOR_RADIUS = 2.5;
-SNAP_CONNECTOR_TOP_ANGLE = 30;
 SNAP_CONNECTOR_SIDE_ANGLE = 20;
 
-assert(SNAP_CONNECTOR_TOP_ANGLE <=
-       45); // The code below assumes this, in order to avoid creating shapes unbounded in size.
 assert(SNAP_CONNECTOR_SIDE_ANGLE <=
        45); // The code below assumes this, in order to avoid creating shapes unbounded in size.
 ;
@@ -681,13 +681,13 @@ LID_TOP_INNER_ELEVATION = get_lid_radius(LID_UPPER_CURVE_W_H) - HINGE_THICKNESS 
 SIDE_SNAP_CONNECTOR_ELEVATION = LID_TOP_INNER_ELEVATION - 12;
 
 // TODO: remove default thickness
-module snap_connector(angle, thickness = 0.5)
+module snap_connector(angle, thickness, extend = 0)
 {
     ROUNDING_Y = 1 / cos(angle) *
                  (-SNAP_CONNECTOR_RADIUS - 2 * SNAP_CONNECTOR_RADIUS * pow(cos(angle), 2) +
                   SNAP_CONNECTOR_RADIUS * sin(angle) - 2 * SNAP_CONNECTOR_RADIUS * pow(sin(angle), 2));
 
-    render() mirror([ 1, 0, 0 ]) difference()
+    render() translate([ 0, 0, -thickness / 2 ]) mirror([ 1, 0, 0 ]) difference()
     {
         union()
         {
@@ -697,6 +697,13 @@ module snap_connector(angle, thickness = 0.5)
                 {
                     translate([ SNAP_CONNECTOR_RADIUS, 0, 0 ]) cylinder(h = thickness, r = SNAP_CONNECTOR_RADIUS);
                     mirror([ 0, 1, 0 ]) cube([ SNAP_CONNECTOR_RADIUS * 2, SNAP_CONNECTOR_RADIUS * 2, thickness ]);
+                    if (extend != 0)
+                    {
+
+                        translate([ SNAP_CONNECTOR_RADIUS, 0, 0 ]) rotate([ 0, 0, -angle ])
+                            cuboid([ abs(extend), SNAP_CONNECTOR_RADIUS * 2, thickness ],
+                                   anchor = (extend > 0 ? LEFT : RIGHT) + BOTTOM);
+                    }
                 }
 
                 difference()
@@ -710,152 +717,264 @@ module snap_connector(angle, thickness = 0.5)
                 }
             }
         }
-        translate([ -LARGE_VALUE / 2 - DEFAULT_CLEARANCE / 2 - _EPSILON, 0, 0 ]) cube(LARGE_VALUE, center = true);
+        translate([ -_EPSILON, 0, 0 ]) cuboid(LARGE_VALUE, anchor = RIGHT);
     }
 }
 
-module snap_connector_negative(angle, thickness = 0.5)
+module snap_connector_negative(angle, thickness, extend = 0)
 {
     render() translate([ -DEFAULT_CLEARANCE, 0, 0 ]) difference()
     {
-        rotate([ 0, 0, 180 ]) snap_connector(angle, thickness);
-        translate([ -LARGE_VALUE / 2 - _EPSILON, 0, 0 ]) cube(LARGE_VALUE, center = true);
+        rotate([ 0, 0, 180 ]) snap_connector(angle, thickness, extend = extend);
+        translate([ -_EPSILON, 0, 0 ]) cuboid(LARGE_VALUE, anchor = RIGHT);
     }
 }
 
+SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS = OUTER_SHELL_THICKNESS + INNER_STAND_LIP_THICKNESS;
+// SIDE_SNAP_CONNECTOR_WALL_DEPTH = 2 / 3;
+// SIDE_SNAP_CONNECTOR_HOLLOW_DEPTH = SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS - 2 * SIDE_SNAP_CONNECTOR_WALL_DEPTH;
+SIDE_SNAP_CONNECTOR_PLUG_THICKNESS = SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS - 1.25;
+
+INTER_SNAP = 4;
+
+// module flanged_sphere(r)
+// {
+//     r = 4;
+//     sqr = r / sqrt(2);
+//     rotate_extrude() union()
+//     {
+//         difference()
+//         {
+//             circle(r, anchor = FRONT);
+//             translate([ 0, -_EPSILON ]) rect(2 * r + 2 * _EPSILON, anchor = RIGHT + FRONT);
+//         }
+//         rect([ r, r ], anchor = FRONT + LEFT);
+//         translate([ sqr, 0 ]) right_triangle([ r + sqr, r + sqr ]);
+//     }
+// }
+
+module truncated_sphere(r, h, center_z = true)
+{
+    translate([ 0, 0, center_z ? -h / 2 : 0 ]) difference()
+    {
+        translate([ 0, 0, h ]) sphere(r, anchor = TOP);
+        cuboid(LARGE_VALUE, anchor = TOP);
+    }
+}
+
+SNAP_COMPENSATION_BASE = 0.1;
+
+module expand_negative_connector()
+{
+    render() minkowski()
+    {
+        union()
+        {
+            children();
+        }
+        translate([ SNAP_COMPENSATION_BASE / 2, 0, 0 ]) scale([ 1, 1, 1 ])
+            cylinder(h = _EPSILON, r = SNAP_COMPENSATION_BASE);
+    }
+}
+
+module side_snap_connector_hull_fr(total_height)
+{
+    render() difference()
+    {
+        minkowski()
+        {
+            render() union() duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, INTER_SNAP, 0 ])
+                snap_connector_negative(SNAP_CONNECTOR_SIDE_ANGLE, _EPSILON, extend = -INTER_SNAP * 2);
+            // #render() flanged_sphere((total_height - _EPSILON) / 2);
+            truncated_sphere(total_height, total_height - _EPSILON);
+        };
+        cuboid(LARGE_VALUE, anchor = RIGHT);
+    }
+}
+
+module snap_connector_bezel(sticky_outy_height)
+{
+    duplicate_and_mirror([ 0, 0, 1 ]) translate([ -SNAP_CONNECTOR_RADIUS, 0, sticky_outy_height / 2 ])
+        rotate([ 0, -10, 0 ]) cuboid(LARGE_VALUE, anchor = BOTTOM);
+}
+
+SNAP_CONNECTOR_CENTRAL_PLUG_COMPRESSION_EACH_SIDE = SNAP_COMPENSATION_BASE / 2;
+SNAP_CONNECTOR_OUTER_PORTS_COMPRESSION_EACH_SIDE = SNAP_COMPENSATION_BASE / 2;
+SIDE_CONNECTOR_CLEARANCE = DEFAULT_CLEARANCE / 2;
+
+module side_snap_connectors_fr_comp(total_height, sticky_outy_height)
+{
+    negative_height = sticky_outy_height + 2 * DEFAULT_CLEARANCE;
+
+    carvable() side_snap_connector_hull_fr(total_height);
+    duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, INTER_SNAP, 0 ])
+    {
+        positive() render() translate([ 0, -SNAP_CONNECTOR_CENTRAL_PLUG_COMPRESSION_EACH_SIDE, 0 ]) difference()
+        {
+            snap_connector(SNAP_CONNECTOR_SIDE_ANGLE, sticky_outy_height, extend = INTER_SNAP / 2);
+            snap_connector_bezel(sticky_outy_height);
+        }
+        negative() render() translate([ 0, SNAP_CONNECTOR_OUTER_PORTS_COMPRESSION_EACH_SIDE, 0 ])
+            expand_negative_connector() snap_connector_negative(SNAP_CONNECTOR_SIDE_ANGLE, negative_height, extend = 0);
+    }
+}
+
+module side_snap_connectors_fl_comp(total_height, sticky_outy_height)
+{
+    negative_height = sticky_outy_height + 2 * DEFAULT_CLEARANCE;
+
+    carvable() mirror([ 1, 0, 0 ]) side_snap_connector_hull_fr(total_height);
+    duplicate_and_mirror([ 0, 1, 0 ]) translate([ 0, INTER_SNAP, 0 ]) rotate([ 0, 0, 180 ])
+    {
+
+        negative() render() expand_negative_connector()
+            snap_connector_negative(SNAP_CONNECTOR_SIDE_ANGLE, negative_height, extend = INTER_SNAP / 2);
+        positive() render() difference()
+        {
+            snap_connector(SNAP_CONNECTOR_SIDE_ANGLE, sticky_outy_height, extend = 0);
+            snap_connector_bezel(sticky_outy_height);
+        }
+    }
+}
+
+PRINT_ROTATION = 90;
+
+// difference()
+// {
+//     union()
+//     {
+//         color("blue") translate([ 10, 0, 0 ]) rotate([ 0, PRINT_ROTATION, 0 ]) render() compose()
+//             side_snap_connectors_fr(SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS,
+//                                     SIDE_SNAP_CONNECTOR_PLUG_THICKNESS);
+
+//         color("green") translate([ -10, 0, 0 ]) rotate([ 0, -PRINT_ROTATION, 0 ]) render() compose()
+//             side_snap_connectors_fl(SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS,
+//                                     SIDE_SNAP_CONNECTOR_PLUG_THICKNESS);
+//     }
+//     // translate([ 0, 0, 0.5 ]) cuboid(LARGE_VALUE, anchor = BOTTOM);
+// }
+
 /********/
 
-SIDE_SNAP_CONNECTOR_HOUSING_DEPTH = OUTER_SHELL_THICKNESS + INNER_STAND_LIP_THICKNESS;
-SIDE_SNAP_CONNECTOR_WALL_DEPTH = 2 / 3;
-SIDE_SNAP_CONNECTOR_HOLLOW_DEPTH = SIDE_SNAP_CONNECTOR_HOUSING_DEPTH - 2 * SIDE_SNAP_CONNECTOR_WALL_DEPTH;
-SIDE_SNAP_CONNECTOR_STICKY_OUTY_DEPTH = SIDE_SNAP_CONNECTOR_HOLLOW_DEPTH - 2 * DEFAULT_CLEARANCE;
-
-SNAP_CONNECTOR_HOUSING_STRETCH_HACK_HEIGHT = 10;
+module thumb_divot_fr()
+{
+    translate([
+        THUMB_DIVOT_X, -CUBE_EDGE_LENGTH / 2 - OUTER_SHELL_THICKNESS - THUMB_DIVOT_RADIUS + THUMB_DIVOT_DEPTH,
+        THUMB_DIVOT_Y
+    ]) sphere(THUMB_DIVOT_RADIUS, $fn = THUMB_DIVOTS_FN);
+}
 
 module lids()
 {
     side_snap_connector_offset = [ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_ELEVATION ];
     snap_connector_sep_each = [ 0, 0, -5 ];
-    union()
+    render() difference()
     {
-        difference()
-        {
-
-            union()
-            {
-                render() duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference() difference()
-                {
-                    union()
-                    {
-                        render() minkowski_shell()
-                        {
-                            union()
-                            {
-                                // lid_part(CUBE_EDGE_LENGTH / 2, CUBE_EDGE_LENGTH,
-                                // CUBE_EDGE_LENGTH);
-                                lid_part_upper();
-                                lid_part(LID_LOWER_CURVE_W_H, CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2);
-
-                                translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ])
-                                    cube([
-                                        OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT +
-                                        INNER_STAND_FLOOR_ELEVATION
-                                    ]);
-                            }
-
-                            sphere(OUTER_SHELL_THICKNESS);
-                        }
-
-                        translate([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, 0 ])
-                            rotate([ 90, -90, 0 ])
-                                round_bevel_complement(OUTER_SHELL_INNER_WIDTH, INNER_STAND_LIP_THICKNESS);
-                    }
-
-                    translate([ -LARGE_VALUE / 2, 0, 0 ])
-                        cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
-
-                    translate([
-                        -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS) / 2,
-                        -BASE_HEIGHT -
-                        _EPSILON
-                    ])
-                        cube([
-                            BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_OUTER_WIDTH, GEAR_MAX_RADIAL_DIVERGENCE +
-                            _EPSILON
-                        ]);
-                    translate([ -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH) / 2, -BASE_HEIGHT - _EPSILON ])
-                        cube([ BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + _EPSILON ]);
-
-                    translate([ 0, 0, -HINGE_THICKNESS ]) rotate([ 90, 0, 0 ]) round_bevel_complement(
-                        height = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
-                        radius = HINGE_THICKNESS / 2, center_z = true);
-
-                    duplicate_and_mirror([ 0, 1, 0 ]) translate([
-                        THUMB_DIVOT_X,
-                        -CUBE_EDGE_LENGTH / 2 - OUTER_SHELL_THICKNESS - THUMB_DIVOT_RADIUS + THUMB_DIVOT_DEPTH,
-                        THUMB_DIVOT_Y
-                    ]) sphere(THUMB_DIVOT_RADIUS, $fn = THUMB_DIVOTS_FN);
-                }
-
-                render() difference()
-                {
-                    render() translate([ 0, -SIDE_SNAP_CONNECTOR_WALL_DEPTH, 0 ]) duplicate_and_rotate([ 0, 0, 180 ])
-                        rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate(side_snap_connector_offset)
-                            duplicate_and_mirror([ 0, 0, 1 ]) translate(snap_connector_sep_each) render() minkowski()
-                    {
-                        rotate([ -90, 0, 0 ]) snap_connector_negative(SNAP_CONNECTOR_SIDE_ANGLE,
-                                                                      SIDE_SNAP_CONNECTOR_HOLLOW_DEPTH - _EPSILON);
-                        render() union()
-                        {
-                            sphere(SIDE_SNAP_CONNECTOR_WALL_DEPTH);
-                            cylinder(h = SNAP_CONNECTOR_HOUSING_STRETCH_HACK_HEIGHT,
-                                     r = SIDE_SNAP_CONNECTOR_WALL_DEPTH);
-                            translate([ 0, 0, SNAP_CONNECTOR_HOUSING_STRETCH_HACK_HEIGHT ])
-                                sphere(SIDE_SNAP_CONNECTOR_WALL_DEPTH);
-                        }
-                    };
-                    render() rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) cuboid(LARGE_VALUE, anchor = RIGHT);
-                }
-            }
-
-            render() union()
-            {
-                translate([ 0, -SIDE_SNAP_CONNECTOR_WALL_DEPTH, 0 ]) duplicate_and_rotate([ 0, 0, 180 ])
-                    rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate(side_snap_connector_offset)
-                        duplicate_and_mirror([ 0, 0, 1 ]) translate(snap_connector_sep_each) rotate([ -90, 0, 0 ])
-                            snap_connector_negative(SNAP_CONNECTOR_SIDE_ANGLE, SIDE_SNAP_CONNECTOR_HOLLOW_DEPTH);
-                duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
-                    translate(side_snap_connector_offset) duplicate_and_mirror([ 0, 0, 1 ])
-                        translate(snap_connector_sep_each) rotate([ -90, 0, 0 ]) rotate([ 0, 0, 180 ])
-                            snap_connector_negative(SNAP_CONNECTOR_SIDE_ANGLE);
-            }
-
-            translate([
-                0, 0,
-                LARGE_VALUE / 2 - BASE_LATTICE_COMPLEMENT_OFFSET -
-                    DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES *
-                DEFAULT_CLEARANCE
-            ]) cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
-
-            engraving();
-            rotate([ 0, 0, 180 ]) engraving();
-
-            debug_quarter_negative();
-        }
-
         render() union()
         {
-            translate([ 0, -SIDE_SNAP_CONNECTOR_WALL_DEPTH - DEFAULT_CLEARANCE, 0 ]) duplicate_and_rotate([ 0, 0, 180 ])
-                rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate(side_snap_connector_offset)
-                    duplicate_and_mirror([ 0, 0, 1 ]) translate(snap_connector_sep_each) rotate([ -90, 0, 0 ])
-                        snap_connector(SNAP_CONNECTOR_SIDE_ANGLE, SIDE_SNAP_CONNECTOR_STICKY_OUTY_DEPTH);
-            duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
-                translate(side_snap_connector_offset) duplicate_and_mirror([ 0, 0, 1 ])
-                    translate(snap_connector_sep_each) rotate([ -90, 0, 0 ]) rotate([ 0, 0, 180 ])
-                        snap_connector(SNAP_CONNECTOR_SIDE_ANGLE);
+            difference()
+            {
+
+                union()
+                {
+                    render() duplicate_and_mirror_with_corresponding_lats_and_bottom_rounding_difference() difference()
+                    {
+                        union()
+                        {
+                            render() minkowski_shell()
+                            {
+                                union()
+                                {
+                                    // lid_part(CUBE_EDGE_LENGTH / 2, CUBE_EDGE_LENGTH,
+                                    // CUBE_EDGE_LENGTH);
+                                    lid_part_upper();
+                                    lid_part(LID_LOWER_CURVE_W_H, CUBE_EDGE_LENGTH + INNER_STAND_LIP_THICKNESS * 2);
+
+                                    translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_THICKNESS - BASE_HEIGHT ])
+                                        cube([
+                                            OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT +
+                                            INNER_STAND_FLOOR_ELEVATION
+                                        ]);
+                                }
+
+                                sphere(OUTER_SHELL_THICKNESS);
+                            }
+
+                            translate([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, 0 ])
+                                rotate([ 90, -90, 0 ])
+                                    round_bevel_complement(OUTER_SHELL_INNER_WIDTH, INNER_STAND_LIP_THICKNESS);
+                        }
+
+                        translate([ -LARGE_VALUE / 2, 0, 0 ])
+                            cube([ LARGE_VALUE, LARGE_VALUE, LARGE_VALUE ], center = true);
+
+                        translate([
+                            -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS) / 2,
+                            -BASE_HEIGHT -
+                            _EPSILON
+                        ])
+                            cube([
+                                BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_OUTER_WIDTH, GEAR_MAX_RADIAL_DIVERGENCE +
+                                _EPSILON
+                            ]);
+                        translate(
+                            [ -BASE_LATTICE_OFFSET_OUTER, -(OUTER_SHELL_INNER_WIDTH) / 2, -BASE_HEIGHT - _EPSILON ])
+                            cube([ BASE_LATTICE_OFFSET_OUTER * 2, OUTER_SHELL_INNER_WIDTH, BASE_HEIGHT + _EPSILON ]);
+
+                        translate([ 0, 0, -HINGE_THICKNESS ]) rotate([ 90, 0, 0 ]) round_bevel_complement(
+                            height = OUTER_SHELL_INNER_WIDTH + 2 * OUTER_SHELL_THICKNESS + 2 * _EPSILON,
+                            radius = HINGE_THICKNESS / 2, center_z = true);
+
+                        duplicate_and_mirror([ 0, 1, 0 ]) thumb_divot_fr();
+                    }
+                }
+
+                translate([
+                    0, 0,
+                    LARGE_VALUE / 2 - BASE_LATTICE_COMPLEMENT_OFFSET -
+                        DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES *
+                    DEFAULT_CLEARANCE
+                ]) cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
+
+                engraving();
+                rotate([ 0, 0, 180 ]) engraving();
+
+                debug_quarter_negative();
+            }
         }
+
+        duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+            translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_HEIGHT ]) rotate([ 90, 0, 0 ])
+                side_snap_connectors_fr_comp(SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS,
+                                             SIDE_SNAP_CONNECTOR_PLUG_THICKNESS, $compose_mode = "negative");
+
+        duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
+            translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_HEIGHT ]) rotate([ 90, 0, 0 ])
+                side_snap_connectors_fl_comp(SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS,
+                                             SIDE_SNAP_CONNECTOR_PLUG_THICKNESS, $compose_mode = "negative");
+    }
+
+    // TODO: figure out why `compose()`ing snap connectors with the lid breaks the CSG.
+
+    difference()
+    {
+        union()
+        {
+            compose() duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+                translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_HEIGHT ]) rotate([ 90, 0, 0 ])
+                    side_snap_connectors_fr_comp(SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS,
+                                                 SIDE_SNAP_CONNECTOR_PLUG_THICKNESS);
+
+            compose() duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_left(OPENING_ANGLE_EACH_SIDE)
+                translate([ 0, -OUTER_SHELL_INNER_WIDTH / 2, SIDE_SNAP_CONNECTOR_HEIGHT ]) rotate([ 90, 0, 0 ])
+                    side_snap_connectors_fl_comp(SIDE_SNAP_CONNECTOR_HOUSING_TOTAL_THICKNESS,
+                                                 SIDE_SNAP_CONNECTOR_PLUG_THICKNESS);
+        }
+        duplicate_and_mirror() rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) duplicate_and_mirror([ 0, 1, 0 ])
+            translate([ 0, -1, 0 ]) thumb_divot_fr();
     }
 }
+
 module lid_part_upper()
 {
     lid_part(LID_UPPER_CURVE_W_H, CUBE_EDGE_LENGTH, pre_angle_to_lie_flat_on_table = true);
