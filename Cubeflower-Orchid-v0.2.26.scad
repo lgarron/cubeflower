@@ -1,4 +1,4 @@
-LID_OVEROPENED_FLAT_ANGLE = 1.45;
+LID_OVEROPENED_FLAT_ANGLE = 0;
 
 /********/
 
@@ -8,9 +8,13 @@ VERSION_TEXT = "v0.2.26";
 // Avoid setting to 0 for printing unless you want overly shaved lids
 CUBE_EDGE_LENGTH = 57;        // mm
 OPENING_ANGLE_EACH_SIDE = 45; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
-INCLUDE_INNER_STAND_ENGRAVING = false;
+// OPENING_ANGLE_EACH_SIDE = 0; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
+INCLUDE_INNER_STAND_ENGRAVING = true;
 FILL_INNER_STAND_ENGRAVING = true;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
+
+INCLUDE_SIDE_ENGRAVING = false;
+SIDE_ENGRAVING_FILE = "./archived/engraving/side-engraving.svg";
 
 DEBUG = false;
 PRINT_IN_PLACE = DEBUG;
@@ -34,6 +38,7 @@ include <./node_modules/scad/duplicate.scad>
 include <./node_modules/scad/minkowski_shell.scad>
 include <./node_modules/scad/round_bevel.scad>
 include <./node_modules/scad/small_hinge.scad>
+include <./node_modules/scad/vendor/BOSL2/std.scad>
 
 /*
 
@@ -228,6 +233,8 @@ INNER_STAND_LIP_HEIGHT = 8;
 INNER_STAND_FLOOR_ELEVATION = INNER_STAND_LIP_THICKNESS;
 
 INNER_STAND_ENGRAVING_LEVEL_DEPTH = 0.2;
+
+SIDE_ENGRAVING_DEPTH = 1;
 
 LAT_WIDTH = 4;
 
@@ -738,6 +745,25 @@ module snap_connector_negative(angle)
 
 /********/
 
+SIDE_INNER_INSET = 0.5;
+SIDE_INNER_OFFSET_Z = 1;
+SIDE_INNER_EXTRA_HEIGHT = 2;
+SIDE_ENGRAVING_EXTRA_ELEVATION = 5;
+
+SIDE_EXTRA_WIDTH_FLOOR = INNER_STAND_FLOOR_ELEVATION + INNER_STAND_LIP_HEIGHT + SIDE_INNER_OFFSET_Z;
+SIDE_ENGRAVING_SUPPORTING_ANGLE = 20;
+SIDE_ENGRAVING_SKEW_ANGLE = OPENING_ANGLE_EACH_SIDE + SIDE_ENGRAVING_SUPPORTING_ANGLE;
+
+module side_engravings()
+{
+    duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate([
+        OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS, 0, INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH / 2 +
+        SIDE_ENGRAVING_EXTRA_ELEVATION
+    ]) skew(szx = tan(SIDE_ENGRAVING_SKEW_ANGLE)) rotate([ 90, 0, 90 ]) translate([ 0, 0, -SIDE_ENGRAVING_DEPTH ])
+        linear_extrude(SIDE_ENGRAVING_DEPTH + _EPSILON) scale(0.85)
+            import(SIDE_ENGRAVING_FILE, dpi = 25.4, center = true);
+}
+
 module lids()
 {
 
@@ -770,6 +796,19 @@ module lids()
 
                             sphere(OUTER_SHELL_THICKNESS);
                         }
+
+                        // translate([
+                        //     OUTER_SHELL_INNER_WIDTH / 2 - SIDE_INNER_INSET, 0,
+                        //     INNER_STAND_FLOOR_ELEVATION + INNER_STAND_LIP_HEIGHT +
+                        //     SIDE_INNER_OFFSET_Z
+                        // ])
+                        //     cuboid(
+                        //         [
+                        //             SIDE_INNER_INSET + _EPSILON, OUTER_SHELL_INNER_WIDTH + _EPSILON * 2,
+                        //             CUBE_EDGE_LENGTH - SIDE_EXTRA_WIDTH_FLOOR +
+                        //             SIDE_INNER_EXTRA_HEIGHT
+                        //         ],
+                        //         anchor = LEFT + BOTTOM, chamfer = SIDE_INNER_INSET, edges = LEFT + BOTTOM);
 
                         translate([ OUTER_SHELL_INNER_WIDTH / 2, OUTER_SHELL_INNER_WIDTH / 2, 0 ])
                             rotate([ 90, -90, 0 ])
@@ -836,6 +875,8 @@ module lids()
             rotate([ 0, 0, 180 ]) engraving();
 
             debug_quarter_negative();
+
+            render() side_engravings();
         }
 
         render() union()
