@@ -56,6 +56,10 @@ include <./node_modules/scad/small_hinge.scad>
 
 /*
 
+## v0.2.26
+
+v0.2.26 carries on from v0.2.24. (Changes from v0.2.25 are abandoned.)
+
 ## v0.2.24
 
 - Change back from one to two snap connectors on top (and make the unsnapper a bit smaller to accommodate).
