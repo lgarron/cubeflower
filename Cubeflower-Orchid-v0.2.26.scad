@@ -2,6 +2,9 @@ LID_OVEROPENED_FLAT_ANGLE = 0;
 
 /********/
 
+TOP_TEXT = "CUBEFLOWER";
+TOP_TEXT_SIZE = 6;
+
 DESIGN_VARIANT_TEXT = "ORCHID";
 VERSION_TEXT = "v0.2.26";
 
@@ -955,21 +958,45 @@ module unsnapper_right()
     }
 }
 
-rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+module main_parts()
 {
-    if (DEBUG)
+    union()
     {
-        % main_cube_on_stand();
-    }
-    if (!SEPARATE_INNER_STAND_FOR_PRINTING)
-    {
+        if (DEBUG)
+        {
+            % main_cube_on_stand();
+        }
+        if (!SEPARATE_INNER_STAND_FOR_PRINTING)
+        {
 
-        inner_stand();
+            inner_stand();
+        }
+        color("#ff2200") hinge_connectors();
+        color("#ff8844") hinge();
+        color("#5588ff") lids();
     }
-    color("#ff2200") hinge_connectors();
-    color("#ff8844") hinge();
-    color("#5588ff") lids();
 }
+
+module top_text()
+{
+
+    duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+        translate([ SNAP_CONNECTOR_RADIUS / 2 + (OUTER_SHELL_INNER_WIDTH) / 4, 0, CUBE_EDGE_LENGTH ])
+            rotate([ 0, 0, 90 ]) linear_extrude(CUBE_EDGE_LENGTH)
+                text(TOP_TEXT, size = TOP_TEXT_SIZE, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+}
+
+rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) difference()
+{
+    main_parts();
+    top_text();
+};
+
+color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) intersection()
+{
+    main_parts();
+    top_text();
+};
 
 GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
 
