@@ -4,6 +4,7 @@ LID_OVEROPENED_FLAT_ANGLE = 0;
 
 TOP_TEXT = "CUBEFLOWER";
 TOP_TEXT_SIZE = 6;
+INCLUDE_TOP_TEXT = false;
 
 DESIGN_VARIANT_TEXT = "ORCHID";
 VERSION_TEXT = "v0.2.26";
@@ -12,7 +13,7 @@ VERSION_TEXT = "v0.2.26";
 CUBE_EDGE_LENGTH = 57;        // mm
 OPENING_ANGLE_EACH_SIDE = 45; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
 // OPENING_ANGLE_EACH_SIDE = 0; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
-INCLUDE_INNER_STAND_ENGRAVING = true;
+INCLUDE_INNER_STAND_ENGRAVING = false;
 FILL_INNER_STAND_ENGRAVING = true;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
@@ -878,7 +879,10 @@ module lids()
 
             debug_quarter_negative();
 
-            render() side_engravings();
+            if (INCLUDE_SIDE_ENGRAVING)
+            {
+                render() side_engravings();
+            }
         }
 
         render() union()
@@ -977,26 +981,40 @@ module main_parts()
     }
 }
 
+module top_text_right(text_string, size)
+{
+    rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
+        translate([ SNAP_CONNECTOR_RADIUS / 2 + (OUTER_SHELL_INNER_WIDTH) / 4, 0, CUBE_EDGE_LENGTH ])
+            rotate([ 0, 0, 90 ]) linear_extrude(CUBE_EDGE_LENGTH)
+                text(text_string, size = size, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+}
+
 module top_text()
 {
 
-    duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE)
-        translate([ SNAP_CONNECTOR_RADIUS / 2 + (OUTER_SHELL_INNER_WIDTH) / 4, 0, CUBE_EDGE_LENGTH ])
-            rotate([ 0, 0, 90 ]) linear_extrude(CUBE_EDGE_LENGTH)
-                text(TOP_TEXT, size = TOP_TEXT_SIZE, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+    top_text_right(TOP_TEXT_RIGHT, TOP_TEXT_SIZE_RIGHT);
+    rotate([ 0, 0, 180 ]) top_text_right(TOP_TEXT_LEFT, TOP_TEXT_SIZE_LEFT);
 }
 
-rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) difference()
+if (INCLUDE_TOP_TEXT)
 {
-    main_parts();
-    top_text();
-};
 
-color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) intersection()
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) difference()
+    {
+        main_parts();
+        top_text();
+    };
+
+    color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) intersection()
+    {
+        main_parts();
+        top_text();
+    };
+}
+else
 {
-    main_parts();
-    top_text();
-};
+    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) main_parts();
+}
 
 GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
 
