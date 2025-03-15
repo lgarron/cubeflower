@@ -1,6 +1,6 @@
 {
 	"name": "@lgarron-3d/cubeflower",
-	"version": "0.2.26-pre1",
+	"version": "0.2.26-dev",
 	"license": "CC-BY-NC-SA-4.0",
 	"dependencies": {
 		"@types/bun": "^1.1.14",
