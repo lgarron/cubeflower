@@ -22,10 +22,10 @@ FILL_INNER_STAND_ENGRAVING = true;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
 INCLUDE_SIDE_ENGRAVING = false;
-FILL_SIDE_ENGRAVING = false;
+FILL_SIDE_ENGRAVING = true;
 SIDE_ENGRAVING_FILE = "./archived/engraving/side-engraving.svg";
 
-FILL_VERSION_ENGRAVING = false;
+FILL_VERSION_ENGRAVING = true;
 
 DEBUG = false;
 PRINT_IN_PLACE = DEBUG;
@@ -72,7 +72,12 @@ include <./node_modules/scad/vendor/BOSL2/std.scad>
 
 /*
 
-## v0.2.7
+## v0.2.28
+
+- Deepen the version engraving fill depth to ensure the slicer doesn't skip it.
+- Avoid filling the side engraving if it's not enabled.
+
+## v0.2.27
 
 - Add a side engraving fill option.
 - Add a version engraving fill option.
@@ -394,7 +399,7 @@ module lid_part(w_h, d, pre_angle_to_lie_flat_on_table = false)
         cube([ HINGE_THICKNESS / 2, d, lid_radius - lid_radius_h + h ]);
 }
 
-VERSION_TEXT_ENGRAVING_DEPTH = 0.25;
+VERSION_TEXT_ENGRAVING_DEPTH = FILL_VERSION_ENGRAVING ? 1 : 0.25;
 
 module engraving_text(text_string, _epsilon, valign = "center", halign = "center")
 {
@@ -1035,7 +1040,7 @@ else
     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) main_parts();
 }
 
-if (FILL_SIDE_ENGRAVING)
+if (INCLUDE_SIDE_ENGRAVING && FILL_SIDE_ENGRAVING)
 {
 #color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) side_engravings();
 }
