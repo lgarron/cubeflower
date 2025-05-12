@@ -11,7 +11,7 @@ TOP_TEXT_LEFT = "CUBE";
 TOP_TEXT_SIZE_LEFT = 12;
 
 DESIGN_VARIANT_TEXT = "ORCHID";
-VERSION_TEXT = "v0.2.28";
+VERSION_TEXT = "v0.2.29";
 
 // Avoid setting to 0 for printing unless you want overly shaved lids
 CUBE_EDGE_LENGTH = 57;        // mm
