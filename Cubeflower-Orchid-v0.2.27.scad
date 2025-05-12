@@ -2,7 +2,7 @@ LID_OVEROPENED_FLAT_ANGLE = 0;
 
 /********/
 
-INCLUDE_TOP_TEXT = true;
+INCLUDE_TOP_TEXT = false;
 TOP_TEXT_RIGHT = "FLOWER";
 TOP_TEXT_SIZE_RIGHT = 9;
 // TOP_TEXT_LEFT = TOP_TEXT_RIGHT;
@@ -22,7 +22,10 @@ FILL_INNER_STAND_ENGRAVING = true;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
 INCLUDE_SIDE_ENGRAVING = false;
+FILL_SIDE_ENGRAVING = false;
 SIDE_ENGRAVING_FILE = "./archived/engraving/side-engraving.svg";
+
+FILL_VERSION_ENGRAVING = false;
 
 DEBUG = false;
 PRINT_IN_PLACE = DEBUG;
@@ -69,9 +72,16 @@ include <./node_modules/scad/vendor/BOSL2/std.scad>
 
 /*
 
+## v0.2.7
+
+- Add a side engraving fill option.
+- Add a version engraving fill option.
+
 ## v0.2.26
 
 v0.2.26 carries on from v0.2.24. (Changes from v0.2.25 are abandoned.)
+
+- Add support for top text.
 
 ## v0.2.24
 
@@ -655,7 +665,7 @@ DEFAULT_CLEARANCE_FACTOR_FOR_LID_SHAVE_TO_MATCH_LATS_AT_90_DEGREES = 3;
 ENGRAVING_TEXT_CORNER_OFFSET_X = 2;
 ENGRAVING_TEXT_CORNER_OFFSET_Y = 4;
 
-module engraving()
+module version_text_engraving()
 {
     union()
     {
@@ -676,6 +686,12 @@ module engraving()
             ]) rotate([ 90, 0, 0 ]) engraving_text(VERSION_TEXT, _EPSILON, valign = "bottom", halign = "left");
         }
     }
+}
+
+module version_text_engravings()
+{
+    version_text_engraving();
+    rotate([ 0, 0, 180 ]) version_text_engraving();
 }
 
 /********/
@@ -756,19 +772,19 @@ module snap_connector_negative(angle)
 SIDE_INNER_INSET = 0.5;
 SIDE_INNER_OFFSET_Z = 1;
 SIDE_INNER_EXTRA_HEIGHT = 2;
-SIDE_ENGRAVING_EXTRA_ELEVATION = 2;
+SIDE_ENGRAVING_EXTRA_ELEVATION = 3;
 
 SIDE_EXTRA_WIDTH_FLOOR = INNER_STAND_FLOOR_ELEVATION + INNER_STAND_LIP_HEIGHT + SIDE_INNER_OFFSET_Z;
 SIDE_ENGRAVING_SUPPORTING_ANGLE = 20;
 SIDE_ENGRAVING_SKEW_ANGLE = OPENING_ANGLE_EACH_SIDE + SIDE_ENGRAVING_SUPPORTING_ANGLE;
 
-module side_engravings()
+module side_engravings(epsilon = _EPSILON)
 {
     duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate([
         OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS, 0, INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH / 2 +
         SIDE_ENGRAVING_EXTRA_ELEVATION
     ]) skew(szx = tan(SIDE_ENGRAVING_SKEW_ANGLE)) rotate([ 90, 0, 90 ]) translate([ 0, 0, -SIDE_ENGRAVING_DEPTH ])
-        linear_extrude(SIDE_ENGRAVING_DEPTH + _EPSILON) scale(1) import(SIDE_ENGRAVING_FILE, dpi = 25.4, center = true);
+        linear_extrude(SIDE_ENGRAVING_DEPTH + epsilon) scale(1) import(SIDE_ENGRAVING_FILE, dpi = 25.4, center = true);
 }
 
 module lids()
@@ -878,8 +894,7 @@ module lids()
                 DEFAULT_CLEARANCE
             ]) cube([ 2 * DEFAULT_CLEARANCE, LARGE_VALUE, LARGE_VALUE ], center = true);
 
-            engraving();
-            rotate([ 0, 0, 180 ]) engraving();
+            version_text_engravings();
 
             debug_quarter_negative();
 
@@ -1018,6 +1033,16 @@ if (INCLUDE_TOP_TEXT)
 else
 {
     rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) main_parts();
+}
+
+if (FILL_SIDE_ENGRAVING)
+{
+#color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) side_engravings();
+}
+
+if (FILL_VERSION_ENGRAVING)
+{
+#color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) version_text_engravings();
 }
 
 GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
