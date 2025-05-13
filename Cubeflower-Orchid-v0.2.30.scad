@@ -37,17 +37,19 @@ function unengraved(s) = struct_set(s,
                                     grow = false);
 
 default_variant = struct_set([], [
-    "INCLUDE_INNER_STAND_ENGRAVING", false, //
-    "INCLUDE_SIDE_ENGRAVING", false,        //
-    "FILL_VERSION_ENGRAVING", false,        //
-    "INCLUDE_SHELL", true,                  //
-    "INCLUDE_STAND", true,                  //
+    "INCLUDE_INNER_STAND_ENGRAVING", false,        //
+    "INCLUDE_SIDE_ENGRAVING", false,               //
+    "FILL_VERSION_ENGRAVING", false,               //
+    "INCLUDE_SHELL", true,                         //
+    "INCLUDE_STAND", true,                         //
+    "INCLUDE_SUPPORT_FOR_HINGE_CONNECTORS", false, //
 ]);
 fancy_shell_variant = struct_set(default_variant,
                                  [
-                                     "INCLUDE_SIDE_ENGRAVING", true, //
-                                     "FILL_VERSION_ENGRAVING", true, //
-                                     "INCLUDE_STAND", false,         //
+                                     "INCLUDE_SIDE_ENGRAVING", true,               //
+                                     "FILL_VERSION_ENGRAVING", true,               //
+                                     "INCLUDE_STAND", false,                       //
+                                     "INCLUDE_SUPPORT_FOR_HINGE_CONNECTORS", true, //
                                  ],
                                  grow = false);
 fancy_stand_variant = struct_set(default_variant,
@@ -71,6 +73,7 @@ INCLUDE_SIDE_ENGRAVING = struct_val(variant, "INCLUDE_SIDE_ENGRAVING");
 FILL_VERSION_ENGRAVING = struct_val(variant, "FILL_VERSION_ENGRAVING");
 INCLUDE_SHELL = struct_val(variant, "INCLUDE_SHELL");
 INCLUDE_STAND = struct_val(variant, "INCLUDE_STAND");
+INCLUDE_SUPPORT_FOR_HINGE_CONNECTORS = struct_val(variant, "INCLUDE_SUPPORT_FOR_HINGE_CONNECTORS");
 
 /********/
 
@@ -121,6 +124,10 @@ include <./node_modules/scad/small_hinge.scad>
 include <./node_modules/scad/vendor/BOSL2/std.scad>
 
 /*
+
+## v0.2.30
+
+- Add an explicit support interface object for the hinge connectors.
 
 ## v0.2.29
 
@@ -1171,4 +1178,14 @@ if (INCLUDE_STAND)
                     import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
         }
     }
+}
+
+LAYER_HEIGHT = 0.2;
+HINGE_CONNECTOR_SUPPORT_INTERFACE_THICKNESS = 2 * LAYER_HEIGHT;
+
+if (INCLUDE_SUPPORT_FOR_HINGE_CONNECTORS)
+{
+    color("beige") duplicate_and_mirror([ 0, 1, 0 ])
+        translate([ 0, -15, -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE ])
+            cuboid([ 7.5, 10 - 2 * DEFAULT_CLEARANCE, HINGE_CONNECTOR_SUPPORT_INTERFACE_THICKNESS ], anchor = TOP);
 }
