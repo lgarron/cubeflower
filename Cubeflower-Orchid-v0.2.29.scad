@@ -1,6 +1,80 @@
-LID_OVEROPENED_FLAT_ANGLE = 0;
+VERSION_TEXT = "v0.2.29";
+
+/**
+START_AUTO_INCLUDED_VARIANTS
+[null, "fancy-shell", "fancy-stand"]
+END_AUTO_INCLUDED_VARIANTS
+*/
+
+// Populated by `openscad-auto` for each variant.
+VARIANT = "default"; // ["default", "fancy-shell", "fancy-stand"]
+
+/*
+
+# Bambu Studio config steps
+
+- 0.4mm nozzle, 0.20mm strength
+- Global → Support → Support
+  - Enable support → yes
+  - Type: `tree(auto)`
+  - On build plate only → yes
+  - Remove small overhangs → no
+- Objects
+  - Support blocker sub-object:
+    - Change type → Support Blocker
+  - Solid infill sub-object:
+    - Change type → Modifier
+    - Sparse infill density: 100% (allow the infill pattern to be changed to rectilinear automatically)
+
+*/
+
+include <./node_modules/scad/vendor/BOSL2/std.scad>
+
+function unengraved(s) = struct_set(s,
+                                    [
+                                        "INCLUDE_VERSION_ENGRAVING", false //
+                                    ],
+                                    grow = false);
+
+default_variant = struct_set([], [
+    "INCLUDE_INNER_STAND_ENGRAVING", false, //
+    "INCLUDE_SIDE_ENGRAVING", false,        //
+    "FILL_VERSION_ENGRAVING", false,        //
+    "INCLUDE_SHELL", true,                  //
+    "INCLUDE_STAND", true,                  //
+]);
+fancy_shell_variant = struct_set(default_variant,
+                                 [
+                                     "INCLUDE_SIDE_ENGRAVING", true, //
+                                     "FILL_VERSION_ENGRAVING", true, //
+                                     "INCLUDE_STAND", false,         //
+                                 ],
+                                 grow = false);
+fancy_stand_variant = struct_set(default_variant,
+                                 [
+                                     "INCLUDE_INNER_STAND_ENGRAVING", true, //
+                                     "INCLUDE_SHELL", false,                //
+                                 ],
+                                 grow = false);
+
+variants = struct_set([], [
+    "default", default_variant,         //
+    "fancy-shell", fancy_shell_variant, //
+    "fancy-stand", fancy_stand_variant, //
+]);
+
+variant = struct_val(variants, VARIANT);
+assert(is_undef(variant) == false);
+
+INCLUDE_INNER_STAND_ENGRAVING = struct_val(variant, "INCLUDE_INNER_STAND_ENGRAVING");
+INCLUDE_SIDE_ENGRAVING = struct_val(variant, "INCLUDE_SIDE_ENGRAVING");
+FILL_VERSION_ENGRAVING = struct_val(variant, "FILL_VERSION_ENGRAVING");
+INCLUDE_SHELL = struct_val(variant, "INCLUDE_SHELL");
+INCLUDE_STAND = struct_val(variant, "INCLUDE_STAND");
 
 /********/
+
+LID_OVEROPENED_FLAT_ANGLE = 1.45;
 
 INCLUDE_TOP_TEXT = false;
 TOP_TEXT_RIGHT = "FLOWER";
@@ -11,21 +85,16 @@ TOP_TEXT_LEFT = "CUBE";
 TOP_TEXT_SIZE_LEFT = 12;
 
 DESIGN_VARIANT_TEXT = "ORCHID";
-VERSION_TEXT = "v0.2.29";
 
 // Avoid setting to 0 for printing unless you want overly shaved lids
 CUBE_EDGE_LENGTH = 57;        // mm
 OPENING_ANGLE_EACH_SIDE = 45; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
 // OPENING_ANGLE_EACH_SIDE = 0; // Note: flat bottom is `90 + LID_OVEROPENED_FLAT_ANGLE`, flat inner lid is `90`
-INCLUDE_INNER_STAND_ENGRAVING = false;
 FILL_INNER_STAND_ENGRAVING = true;
 INNER_STAND_ENGRAVING_FILE = "./archived/engraving/engraving.svg";
 
-INCLUDE_SIDE_ENGRAVING = false;
 FILL_SIDE_ENGRAVING = true;
 SIDE_ENGRAVING_FILE = "./archived/engraving/side-engraving.svg";
-
-FILL_VERSION_ENGRAVING = true;
 
 DEBUG = false;
 PRINT_IN_PLACE = DEBUG;
@@ -53,24 +122,11 @@ include <./node_modules/scad/vendor/BOSL2/std.scad>
 
 /*
 
-# Bambu Studio config steps
+## v0.2.29
 
-- 0.4mm nozzle, 0.20mm strength
-- Global → Support → Support
-  - Enable support → yes
-  - Type: `tree(auto)`
-  - On build plate only → yes
-  - Remove small overhangs → no
-- Objects
-  - Support blocker sub-object:
-    - Change type → Support Blocker
-  - Solid infill sub-object:
-    - Change type → Modifier
-    - Sparse infill density: 100% (allow the infill pattern to be changed to rectilinear automatically)
-
-*/
-
-/*
+- Restore `LID_OVEROPENED_FLAT_ANGLE` to 1.45°.
+- Reduce `VERSION_TEXT_ENGRAVING_DEPTH`.
+- Add variants for `openscad-auto.
 
 ## v0.2.28
 
@@ -399,7 +455,7 @@ module lid_part(w_h, d, pre_angle_to_lie_flat_on_table = false)
         cube([ HINGE_THICKNESS / 2, d, lid_radius - lid_radius_h + h ]);
 }
 
-VERSION_TEXT_ENGRAVING_DEPTH = FILL_VERSION_ENGRAVING ? 1 : 0.25;
+VERSION_TEXT_ENGRAVING_DEPTH = FILL_VERSION_ENGRAVING ? OUTER_SHELL_THICKNESS / 2 : 0.25;
 
 module engraving_text(text_string, _epsilon, valign = "center", halign = "center")
 {
@@ -785,11 +841,13 @@ SIDE_ENGRAVING_SKEW_ANGLE = OPENING_ANGLE_EACH_SIDE + SIDE_ENGRAVING_SUPPORTING_
 
 module side_engravings(epsilon = _EPSILON)
 {
-    duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE) translate([
-        OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS, 0, INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH / 2 +
-        SIDE_ENGRAVING_EXTRA_ELEVATION
-    ]) skew(szx = tan(SIDE_ENGRAVING_SKEW_ANGLE)) rotate([ 90, 0, 90 ]) translate([ 0, 0, -SIDE_ENGRAVING_DEPTH ])
-        linear_extrude(SIDE_ENGRAVING_DEPTH + epsilon) scale(1) import(SIDE_ENGRAVING_FILE, dpi = 25.4, center = true);
+    duplicate_and_rotate([ 0, 0, 180 ]) rotate_for_lid_right(OPENING_ANGLE_EACH_SIDE - LID_OVEROPENED_FLAT_ANGLE)
+        translate([
+            OUTER_SHELL_INNER_WIDTH / 2 + OUTER_SHELL_THICKNESS, 0, INNER_STAND_FLOOR_ELEVATION + CUBE_EDGE_LENGTH / 2 +
+            SIDE_ENGRAVING_EXTRA_ELEVATION
+        ]) skew(szx = tan(SIDE_ENGRAVING_SKEW_ANGLE)) rotate([ 90, 0, 90 ]) translate([ 0, 0, -SIDE_ENGRAVING_DEPTH ])
+            linear_extrude(SIDE_ENGRAVING_DEPTH + epsilon) scale(1)
+                import(SIDE_ENGRAVING_FILE, dpi = 25.4, center = true);
 }
 
 module lids()
@@ -1020,86 +1078,97 @@ module top_text()
     rotate([ 0, 0, 180 ]) top_text_right(TOP_TEXT_LEFT, TOP_TEXT_SIZE_LEFT);
 }
 
-if (INCLUDE_TOP_TEXT)
+if (INCLUDE_SHELL)
 {
 
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) difference()
+    if (INCLUDE_TOP_TEXT)
     {
-        main_parts();
-        top_text();
-    };
 
-    color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) intersection()
+        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) difference()
+        {
+            main_parts();
+            top_text();
+        };
+
+        color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) intersection()
+        {
+            main_parts();
+            top_text();
+        };
+    }
+    else
     {
-        main_parts();
-        top_text();
-    };
-}
-else
-{
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) main_parts();
-}
+        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) main_parts();
+    }
 
-if (INCLUDE_SIDE_ENGRAVING && FILL_SIDE_ENGRAVING)
-{
-#color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) side_engravings();
-}
-
-if (FILL_VERSION_ENGRAVING)
-{
-#color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) version_text_engravings();
-}
-
-GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
-
-if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
-{
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("blue") union()
+    if (INCLUDE_SIDE_ENGRAVING && FILL_SIDE_ENGRAVING)
     {
-        hinge_core();
-        translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
-            text("SOLID INFILL", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
-        hinge_connectors();
+        color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) side_engravings();
+    }
+
+    if (FILL_VERSION_ENGRAVING)
+    {
+        color("white") rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) version_text_engravings();
+    }
+
+    GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
+
+    if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG)
+    {
+        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("blue") union()
+        {
+            hinge_core();
+            translate([ 0, 10, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+                text("SOLID INFILL", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+            hinge_connectors();
+        }
+    }
+
+    if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
+    {
+        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("red") union()
+        {
+            // Gears
+            translate([ 0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA ]) cube(
+                [
+                    HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
+                    HINGE_THICKNESS + 2 *
+                    GEAR_SUPPORT_BLOCKER_EXTRA
+                ],
+                center = true);
+            // Engraving
+            translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON ]) cube(
+                [
+                    OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION -
+                    INNER_STAND_CLEARANCE
+                ],
+                center = true);
+
+            translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
+                text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+        }
     }
 }
 
-if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG)
+if (INCLUDE_STAND)
 {
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) color("red") union()
-    {
-        // Gears
-        translate([ 0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA ]) cube(
-            [
-                HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA, OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
-                HINGE_THICKNESS + 2 *
-                GEAR_SUPPORT_BLOCKER_EXTRA
-            ],
-            center = true);
-        // Engraving
-        translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON ]) cube(
-            [ OUTER_SHELL_INNER_WIDTH, OUTER_SHELL_INNER_WIDTH, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE ],
-            center = true);
 
-        translate([ 0, 0, CUBE_EDGE_LENGTH * 1.25 ]) rotate([ 90, 0, 0 ]) linear_extrude(1)
-            text("SUPPORT BLOCKER", size = 5, font = "Ubuntu:style=bold", valign = "center", halign = "center");
+    if (SEPARATE_INNER_STAND_FOR_PRINTING)
+    {
+        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+        {
+            translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
+        }
     }
-}
 
-if (SEPARATE_INNER_STAND_FOR_PRINTING)
-{
-    rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) union()
+    if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
     {
-        translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ]) inner_stand();
-    }
-}
-
-if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING)
-{
-    color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
-        rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
-    {
-        render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
-            linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
-                import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
+        color("white") translate([ 0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0 ])
+            rotate([ SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0 ]) render() union()
+        {
+            render() translate([ 0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2 ])
+                linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
+                    import(INNER_STAND_ENGRAVING_FILE, dpi = 25.4, center = true);
+        }
     }
 }

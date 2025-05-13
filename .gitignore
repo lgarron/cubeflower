@@ -1,2 +1,4 @@
 /archived
 /node_modules
+*.fancy-shell.*
+*.fancy-stand.*
