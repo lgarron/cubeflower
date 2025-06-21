@@ -9,6 +9,10 @@ END_AUTO_INCLUDED_VARIANTS
 // Populated by `openscad-auto` for each variant.
 VARIANT = "default"; // ["default", "fancy-shell", "fancy-stand"]
 
+// This empty block prevents any following `CONSTANT_CASE` variables from being settable in the customizer.
+// This prevents pathological interactions with persisted customizer values that are meant to be controlled exclusively by `VARIANT`.
+{};
+
 /*
 
 # Bambu Studio config steps
