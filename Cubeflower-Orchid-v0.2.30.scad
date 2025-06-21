@@ -30,6 +30,13 @@ VARIANT = "default"; // ["default", "fancy-shell", "fancy-stand"]
     - Change type → Modifier
     - Sparse infill density: 100% (allow the infill pattern to be changed to rectilinear automatically)
 
+For the stand:
+
+- Support
+  - Use PETG or Support for PLA as support interface
+  - Top interface spacing → 0mm
+  - Top Z distance → 0mm
+
 */
 
 include <./node_modules/scad/vendor/BOSL2/std.scad>
