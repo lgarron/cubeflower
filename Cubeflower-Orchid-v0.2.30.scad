@@ -166,6 +166,7 @@ include <./node_modules/scad/vendor/BOSL2/std.scad>
 ## v0.2.30
 
 - Add an explicit support interface object for the hinge connectors.
+- Add group names. (See https://github.com/openscad/openscad/pull/5942)
 
 ## v0.2.29
 
@@ -1059,7 +1060,7 @@ module unsnapper_right() {
   }
 }
 
-module main_parts() {
+module main_shell() {
   union() {
     if (DEBUG) {
       %main_cube_on_stand();
@@ -1090,91 +1091,92 @@ module top_text() {
 if (INCLUDE_SHELL) {
 
   if (INCLUDE_TOP_TEXT) {
-
-    rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) difference() {
-        main_parts();
-        top_text();
-      }
+    group("main_shell") union()
+        rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) difference() {
+            main_shell();
+            top_text();
+          }
     ;
 
-    color("white") rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) intersection() {
-          main_parts();
-          top_text();
-        }
+    group("top_text_engraving") union()
+        color("white") rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) intersection() {
+              main_shell();
+              top_text();
+            }
     ;
   } else {
-    rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) main_parts();
+    group("main_shell") union()
+        rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) main_shell();
   }
 
-  if (INCLUDE_SIDE_ENGRAVING && FILL_SIDE_ENGRAVING) {
-    color("white") rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) side_engravings();
-  }
+  group("side_engravings") union() if (INCLUDE_SIDE_ENGRAVING && FILL_SIDE_ENGRAVING) {
+      color("white") rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) side_engravings();
+    }
 
-  if (FILL_VERSION_ENGRAVING) {
-    color("white") rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) version_text_engravings();
-  }
+  group("version_text_engraving") union() if (FILL_VERSION_ENGRAVING) {
+      color("white") rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) version_text_engravings();
+    }
 
   GEAR_SUPPORT_BLOCKER_EXTRA = 0.5;
 
-  if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG) {
-    rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) color("blue") union() {
-          hinge_core();
-          translate([0, 10, CUBE_EDGE_LENGTH * 1.25]) rotate([90, 0, 0]) linear_extrude(1)
-                text("SOLID INFILL", size=5, font="Ubuntu:style=bold", valign="center", halign="center");
-          hinge_connectors();
-        }
-  }
+  group("solid_infill") union() if (INCLUDE_SOLID_INFILL_SHAPE && !DEBUG) {
+      rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) color("blue") union() {
+            hinge_core();
+            translate([0, 10, CUBE_EDGE_LENGTH * 1.25]) rotate([90, 0, 0]) linear_extrude(1)
+                  text("SOLID INFILL", size=5, font="Ubuntu:style=bold", valign="center", halign="center");
+            hinge_connectors();
+          }
+    }
 
-  if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG) {
-    rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) color("red") union() {
-          // Gears
-          translate([0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA]) cube(
-              [
-                HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA,
-                OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
-                HINGE_THICKNESS + 2 * GEAR_SUPPORT_BLOCKER_EXTRA,
-              ],
-              center=true
-            );
-          // Engraving
-          translate([0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON]) cube(
-              [
-                OUTER_SHELL_INNER_WIDTH,
-                OUTER_SHELL_INNER_WIDTH,
-                INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE,
-              ],
-              center=true
-            );
+  group("support_blocker") union() if (INCLUDE_SUPPORT_BLOCKER_SHAPE && !DEBUG) {
+      rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) color("red") union() {
+            // Gears
+            translate([0, 0, -HINGE_THICKNESS / 2 - GEAR_SUPPORT_BLOCKER_EXTRA]) cube(
+                [
+                  HINGE_THICKNESS * 2 + 2 * GEAR_SUPPORT_BLOCKER_EXTRA,
+                  OUTER_SHELL_OUTER_WIDTH - _EPSILON * 2,
+                  HINGE_THICKNESS + 2 * GEAR_SUPPORT_BLOCKER_EXTRA,
+                ],
+                center=true
+              );
+            // Engraving
+            translate([0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE + _EPSILON]) cube(
+                [
+                  OUTER_SHELL_INNER_WIDTH,
+                  OUTER_SHELL_INNER_WIDTH,
+                  INNER_STAND_FLOOR_ELEVATION - INNER_STAND_CLEARANCE,
+                ],
+                center=true
+              );
 
-          translate([0, 0, CUBE_EDGE_LENGTH * 1.25]) rotate([90, 0, 0]) linear_extrude(1)
-                text("SUPPORT BLOCKER", size=5, font="Ubuntu:style=bold", valign="center", halign="center");
-        }
-  }
+            translate([0, 0, CUBE_EDGE_LENGTH * 1.25]) rotate([90, 0, 0]) linear_extrude(1)
+                  text("SUPPORT BLOCKER", size=5, font="Ubuntu:style=bold", valign="center", halign="center");
+          }
+    }
 }
 
 if (INCLUDE_STAND) {
+  group("inner_stand") union() if (SEPARATE_INNER_STAND_FOR_PRINTING) {
+      rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) union() {
+          translate([0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0]) inner_stand();
+        }
+    }
 
-  if (SEPARATE_INNER_STAND_FOR_PRINTING) {
-    rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) union() {
-        translate([0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0]) inner_stand();
-      }
-  }
-
-  if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING) {
-    color("white") translate([0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0])
-        rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) render() union() {
-              render() translate([0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2])
-                  linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
-                    import(INNER_STAND_ENGRAVING_FILE, dpi=25.4, center=true);
-            }
-  }
+  group("inner_stand_engraving_fill") union() if (INCLUDE_INNER_STAND_ENGRAVING && FILL_INNER_STAND_ENGRAVING) {
+      color("white") translate([0, PRINT_IN_PLACE ? 0 : (OUTER_SHELL_OUTER_WIDTH + 10), 0])
+          rotate([SET_ON_SIDE_FOR_PRINTING ? -90 : 0, 0, 0]) render() union() {
+                render() translate([0, 0, INNER_STAND_FLOOR_ELEVATION - INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2])
+                    linear_extrude(INNER_STAND_ENGRAVING_LEVEL_DEPTH * 2)
+                      import(INNER_STAND_ENGRAVING_FILE, dpi=25.4, center=true);
+              }
+    }
 }
 
 LAYER_HEIGHT = 0.2;
 HINGE_CONNECTOR_SUPPORT_INTERFACE_THICKNESS = 2 * LAYER_HEIGHT;
 
-if (INCLUDE_SUPPORT_FOR_HINGE_CONNECTORS) {
-  color("beige") duplicate_and_mirror([0, 1, 0])
-      translate([0, -15, -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE])
-        cuboid([7.5, 10 - 2 * DEFAULT_CLEARANCE, HINGE_CONNECTOR_SUPPORT_INTERFACE_THICKNESS], anchor=TOP);
-}
+group("support_interface_for_hinge_connectors") union() if (INCLUDE_SUPPORT_FOR_HINGE_CONNECTORS) {
+    color("beige") duplicate_and_mirror([0, 1, 0])
+        translate([0, -15, -HINGE_THICKNESS + __SMALL_HINGE__CONNECTOR_OUTSIDE_CLEARANCE])
+          cuboid([7.5, 10 - 2 * DEFAULT_CLEARANCE, HINGE_CONNECTOR_SUPPORT_INTERFACE_THICKNESS], anchor=TOP);
+  }
