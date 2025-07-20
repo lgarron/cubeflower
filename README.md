@@ -3,7 +3,8 @@
 An elegant print-in-place cube box with a few useful features.
 
 <https://www.youtube.com/shorts/GLqVjow3PYY>
-![Left and right lids of the cube flower folded mostly open, with the cube elevated in the middle](./img/Cubeflower-Orchid-v0.1.3.avif)
+
+<img alt="Left and right lids of a more recent version of the Orchid cubeflower folded partially, with the cube elevated in the middle" src="./img/Cubeflower-Orchid-v0.2.29.avif" width="480"><img alt="Left and right lids of an earlier version of the Orchid cubeflower folded mostly open, with the cube elevated in the middle" src="./img/Cubeflower-Orchid-v0.1.3.avif" width="480">
 
 ## Revisions
 
@@ -14,9 +15,9 @@ An elegant print-in-place cube box with a few useful features.
 
 For now, consider printing [v0.1.6](https://github.com/lgarron/cubeflower/blob/v0.1.6/cube-box-v0.1.6.scad.3mf) before trying to print any `v0.2.x` version.
 
-`v0.2.x` trades off carrying size for more reliance on material strength and printer tolerances. I personally get my best results with [Burgundy PLA-CF](https://us.store.bambulab.com/products/pla-cf) on a [Bambu Lab X1 Carbon](https://us.store.bambulab.com/products/x1-carbon).
+`v0.2.x` trades off carrying size for more reliance on material strength and printer tolerances. I personally get my best results with [Burgundy PLA-CF](https://us.store.bambulab.com/products/pla-cf) on a Bambu Lab [X1 Carbon](https://us.store.bambulab.com/products/x1-carbon) or [H2D](https://us.store.bambulab.com/products/h2d).
 
-Of the 0.2.x versions, [v0.2.14](https://github.com/lgarron/cubeflower/blob/v0.2.14/Cubeflower-Orchid-v0.2.14.scad) is currently the most battle-tested.
+Of the 0.2.x versions, [v0.2.29](https://github.com/lgarron/cubeflower/blob/v0.2.29/Cubeflower-Orchid-v0.2.29.scad) is currently the most battle-tested.
 
 ## License
 
